@@ -29,7 +29,10 @@
             <div class="collapse" id="ui-basic">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/ui-features/buttons.html">Course Registeration</a>
+                        <a class="nav-link" href="{{ url('student/courses/registration') }}">Course Registeration</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url('student/courses/{semester}') }}">View Registered Course</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="pages/ui-features/dropdowns.html">Class Timetable</a>

@@ -81,6 +81,21 @@
                 @endif
             @endif
         </div>
+        <!-- Department Selection (Only for students) -->
+        @if($this->user->usertype == 'student')
+            <div class="col-span-6 sm:col-span-4">
+                <x-label for="department_id" value="{{ __('Department') }}" />
+                <x-select id="department_id" wire:model="state.department_id">
+                    <option value="">{{ __('Select Department') }}</option>
+                    @foreach($departments as $department)
+                        <option value="{{ $department->id }}" {{ $department->id == old('department_id', $this->user->department_id) ? 'selected' : '' }}>
+                            {{ $department->name }}
+                        </option>
+                    @endforeach
+                </x-select>
+                <x-input-error for="department_id" class="mt-2" />
+            </div>
+        @endif
     </x-slot>
 
     <x-slot name="actions">

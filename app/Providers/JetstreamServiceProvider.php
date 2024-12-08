@@ -36,6 +36,8 @@ class JetstreamServiceProvider extends ServiceProvider
         Jetstream::removeTeamMembersUsing(RemoveTeamMember::class);
         Jetstream::deleteTeamsUsing(DeleteTeam::class);
         Jetstream::deleteUsersUsing(DeleteUser::class);
+
+        $this->app->singleton(UpdatesUserProfileInformation::class, UpdateUserProfileInformation::class);
     }
 
     /**
