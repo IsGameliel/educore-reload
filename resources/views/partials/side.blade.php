@@ -72,7 +72,13 @@
             <div class="collapse" id="courses">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/samples/blank-page.html"> Add/Manage Courses </a>
+                        <a class="nav-link" href="{{ route('admin.courses.index')}}"> Add/Manage Courses </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.faculties.index')}}"> Add/Manage Faculty </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.departments.index') }}"> Add/Manage Departments </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="pages/samples/login.html"> Class Schedules & Timetables </a>

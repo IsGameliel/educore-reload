@@ -9,6 +9,9 @@ use App\Http\Controllers\RegistrarController;
 use App\Http\Controllers\BursarController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CourseRegistrationController;
+use App\Http\Controllers\CourseController;
+use App\Http\Controllers\FacultyController;
+use App\Http\Controllers\DepartmentController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -46,5 +49,14 @@ Route::middleware([
 
         Route::get('/user/profile', [\App\Http\Controllers\CustomProfileController::class, 'show'])
             ->name('profile.show');
+    });
+
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::resource('courses', CourseController::class);
+        Route::get('courses/{course}/prerequisites', [CourseController::class, 'showPrerequisites'])->name('courses.prerequisites');
+        Route::post('courses/{course}/prerequisites', [CourseController::class, 'assignPrerequisites'])->name('courses.assignPrerequisites');
+
+        Route::resource('faculties', FacultyController::class);
+        Route::resource('departments', DepartmentController::class);
     });
 });

@@ -4,6 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use App\Models\Department;
+use App\Models\Faculty;
+
+
 
 class HomeController extends Controller
 {
@@ -12,7 +17,10 @@ class HomeController extends Controller
             return view('student.dashboard');
         }
         elseif(Auth::user()->usertype == 'admin'){
-            return view('admin.dashboard');
+            $studentsCount = User::where('usertype', 'student')->count();
+            $departmentsCount = Department::count();
+            $facultyCount = Faculty::count();
+            return view('admin.dashboard', compact('studentsCount', 'departmentsCount', 'facultyCount'));
         }
         else{
             return view('dashboard');
