@@ -78,4 +78,14 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Department::class); // Foreign key 'department_id' in users table
     }
+
+    public function classSchedules()
+    {
+        return $this->hasMany(ClassSchedule::class, 'lecturer', 'id');
+    }
+
+    // public function classSchedules()
+    // {
+    //     return $this->hasMany(ClassSchedule::class, 'lecturer_id');
+    // }
 }

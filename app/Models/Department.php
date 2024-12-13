@@ -29,4 +29,9 @@ class Department extends Model
     {
         return $this->belongsTo(Faculty::class, 'faculty_id'); // foreign key 'faculty_id' in departments table
     }
+
+    public function classSchedules()
+    {
+        return $this->hasMany(ClassSchedule::class);
+    }
 }

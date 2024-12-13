@@ -12,6 +12,9 @@ use App\Http\Controllers\CourseRegistrationController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\FacultyController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\ClassScheduleController;
+use App\Http\Controllers\StudentScheduleController;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -49,6 +52,7 @@ Route::middleware([
 
         Route::get('/user/profile', [\App\Http\Controllers\CustomProfileController::class, 'show'])
             ->name('profile.show');
+        Route::get('schedule', [StudentScheduleController::class, 'index'])->name('schedule');
     });
 
     Route::prefix('admin')->name('admin.')->group(function () {
@@ -58,5 +62,7 @@ Route::middleware([
 
         Route::resource('faculties', FacultyController::class);
         Route::resource('departments', DepartmentController::class);
+
+        Route::resource('class-schedules', ClassScheduleController::class);
     });
 });

@@ -81,7 +81,7 @@
                         <a class="nav-link" href="{{ route('admin.departments.index') }}"> Add/Manage Departments </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/samples/login.html"> Class Schedules & Timetables </a>
+                        <a class="nav-link" href="{{ route('admin.class-schedules.index')}}"> Class Schedules & Timetables </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="pages/samples/register.html"> Assign Instructors </a>

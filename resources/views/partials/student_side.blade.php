@@ -35,7 +35,7 @@
                         <a class="nav-link" href="{{ url('student/courses/{semester}') }}">View Registered Course</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/ui-features/dropdowns.html">Class Timetable</a>
+                        <a class="nav-link" href="{{ route('student.schedule')}}">Class Timetable</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="pages/ui-features/typography.html">Course Material</a>
