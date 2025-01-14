@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('class_schedules', function (Blueprint $table) {
             $table->id();
-            $table->string('department');
+            $table->foreignId('department_id')->constrained('departments')->onDelete('cascade');
             $table->string('level');
             $table->string('semester');
             $table->string('subject');

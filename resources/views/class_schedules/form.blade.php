@@ -1,9 +1,9 @@
 <div class="form-group">
     <label for="department">Department</label>
-    <select name="department" id="department" class="form-control" required>
+    <select name="department_id" id="department" class="form-control" required>
         <option value="">Select Department</option>
         @foreach($departments as $department)
-            <option value="{{ $department->id }}" {{ (old('department') == $department->id || isset($schedule) && $schedule->department == $department->id) ? 'selected' : '' }}>
+            <option value="{{ $department->id }}" {{ (old('department_id') == $department->id || isset($schedule) && $schedule->department == $department->id) ? 'selected' : '' }}>
                 {{ $department->name }}
             </option>
         @endforeach

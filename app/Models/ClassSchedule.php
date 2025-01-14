@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use app\Models\User;
+use app\Models\Courses;
+
 
 class ClassSchedule extends Model
 {
@@ -12,7 +14,7 @@ class ClassSchedule extends Model
 
     // Allowable fields for mass assignment
     protected $fillable = [
-        'department',
+        'department_id',
         'level',
         'semester',
         'subject',
@@ -40,6 +42,7 @@ class ClassSchedule extends Model
     public function lecturer()
     {
         return $this->belongsTo(User::class, 'lecturer_id', 'id') // Correct foreign key and related field
-            ->where('usertype', 'admin');  // Filter users with 'lecturer' usertype
+            ->where('usertype', 'lecturer');  // Filter users with 'lecturer' usertype
     }
+
 }

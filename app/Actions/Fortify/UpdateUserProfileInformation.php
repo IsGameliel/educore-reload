@@ -21,6 +21,7 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'department_id' => ['nullable', 'exists:departments,id'], // Add validation for the department
+            'photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'], // Validate the photo
         ])->validateWithBag('updateProfileInformation');
 
         if ($input['email'] !== $user->email &&
@@ -33,7 +34,28 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
                 'department_id' => $input['department_id'] ?? $user->department_id, // Save department
             ])->save();
         }
+        // Handle profile photo update
+        if (isset($input['photo'])) {
+            $this->updateProfilePhoto($user, $input['photo']);
+        }
     }
+
+    protected function updateProfilePhoto($user, $photo)
+    {
+        // Delete the old profile photo if it exists
+        if ($user->profile_photo_path) {
+            Storage::disk('public')->delete($user->profile_photo_path);
+        }
+
+        // Store the new photo
+        $filePath = $photo->store('profile_photos', 'public');
+
+        // Update the user's profile photo path
+        $user->forceFill([
+            'profile_photo_path' => $filePath,
+        ])->save();
+    }
+
 
     /**
      * Update the given verified user's profile information.
