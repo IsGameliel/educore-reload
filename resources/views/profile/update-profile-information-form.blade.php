@@ -95,6 +95,18 @@
                 </x-select>
                 <x-input-error for="department_id" class="mt-2" />
             </div>
+            <div class="col-span-6 sm:col-span-4">
+                <x-label for="level" value="{{ __('Level') }}" />
+                <x-select id="level" wire:model="state.level">
+                    <option value="">{{ __('Select Level') }}</option>
+                    <option value="100" {{ $this->user->level == '100' ? 'selected' : '' }}>100 Level</option>
+                    <option value="200" {{ $this->user->level == '200' ? 'selected' : '' }}>200 Level</option>
+                    <option value="300" {{ $this->user->level == '300' ? 'selected' : '' }}>300 Level</option>
+                    <option value="400" {{ $this->user->level == '400' ? 'selected' : '' }}>400 Level</option>
+                    <option value="500" {{ $this->user->level == '500' ? 'selected' : '' }}>500 Level</option>
+                </x-select>
+                <x-input-error for="state.level" class="mt-2" />
+            </div>
         @endif
     </x-slot>
 

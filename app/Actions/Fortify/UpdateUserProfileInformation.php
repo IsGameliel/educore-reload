@@ -21,6 +21,7 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'department_id' => ['nullable', 'exists:departments,id'], // Add validation for the department
+            'level' => ['nullable', 'string'],
             'photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'], // Validate the photo
         ])->validateWithBag('updateProfileInformation');
 
@@ -32,6 +33,7 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
                 'name' => $input['name'],
                 'email' => $input['email'],
                 'department_id' => $input['department_id'] ?? $user->department_id, // Save department
+                'level' => $input['level'],
             ])->save();
         }
         // Handle profile photo update

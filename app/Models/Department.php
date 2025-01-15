@@ -34,4 +34,8 @@ class Department extends Model
     {
         return $this->hasMany(ClassSchedule::class);
     }
+    public function courseMaterials()
+    {
+        return $this->hasMany(CourseMaterial::class, 'department_id');
+    }
 }

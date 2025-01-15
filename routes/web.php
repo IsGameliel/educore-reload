@@ -14,6 +14,7 @@ use App\Http\Controllers\FacultyController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\ClassScheduleController;
 use App\Http\Controllers\StudentScheduleController;
+use App\Http\Controllers\CourseMaterialController;
 
 
 Route::get('/', function () {
@@ -53,6 +54,8 @@ Route::middleware([
         Route::get('/user/profile', [\App\Http\Controllers\CustomProfileController::class, 'show'])
             ->name('profile.show');
         Route::get('schedule', [StudentScheduleController::class, 'index'])->name('schedule');
+
+        Route::get('/course-materials', [StudentController::class, 'CourseMaterial'])->name('course-materials');
     });
 
     Route::prefix('admin')->name('admin.')->group(function () {
@@ -64,5 +67,15 @@ Route::middleware([
         Route::resource('departments', DepartmentController::class);
 
         Route::resource('class-schedules', ClassScheduleController::class);
+
+        // Course Material
+        Route::get('/course-materials', [CourseMaterialController::class, 'index'])->name('course-materials');
+        Route::get('/course-materials/create', [CourseMaterialController::class, 'create'])->name('course-materials.create');
+        Route::post('/course-materials', [CourseMaterialController::class, 'store'])->name('course-materials.store');
+        Route::get('/course-materials/{id}', [CourseMaterialController::class, 'show']);
+        Route::get('/course-materials/{id}/download', [CourseMaterialController::class, 'download']);
+        Route::delete('/course-materials/{id}', [CourseMaterialController::class, 'destroy'])->name('course-materials.destroy');
+        Route::get('admin/course-materials/{id}/edit', [CourseMaterialController::class, 'edit'])->name('course-materials.edit');
+        Route::put('admin/course-materials/{id}', [CourseMaterialController::class, 'update'])->name('course-materials.update');
     });
 });

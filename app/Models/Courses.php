@@ -63,4 +63,10 @@ class Courses extends Model
         // Return true if the course is offered in the given semester
         return $this->semester === $semester;
     }
+
+    public function courseMaterials()
+    {
+        return $this->hasMany(CourseMaterial::class, 'course_id');
+    }
+
 }
