@@ -40,9 +40,6 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('student.course-materials')}}">Course Material</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="pages/ui-features/typography.html">Assigments & Submission</a>
-                    </li>
                 </ul>
             </div>
         </li>
