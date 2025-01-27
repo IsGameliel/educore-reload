@@ -38,8 +38,8 @@ class CourseMaterialController extends Controller
             'semester' => 'required|string',
             'department_id' => 'nullable|exists:departments,id',
             'course_id' => 'nullable|exists:courses,id',
-            'file' => 'required|file|mimes:pdf|max:2048', // Validate for PDF files
-            'cover_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validate for images
+            'file' => 'required|file|mimes:pdf|max:20480', // Validate for PDF files
+            'cover_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5048', // Validate for images
         ]);
 
         // Store the uploaded PDF
@@ -92,8 +92,8 @@ class CourseMaterialController extends Controller
             'semester' => 'required|string',
             'department_id' => 'nullable|exists:departments,id',
             'course_id' => 'nullable|exists:courses,id',
-            'file' => 'nullable|file|mimes:pdf|max:2048', // Validate for PDF files
-            'cover_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validate for images
+            'file' => 'nullable|file|mimes:pdf|max:20480', // Validate for PDF files
+            'cover_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5048', // Validate for images
         ]);
 
         // Update the PDF file if provided

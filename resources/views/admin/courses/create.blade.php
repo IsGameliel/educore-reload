@@ -40,13 +40,26 @@
                         <div class="form-group">
                             <label for="semester">Semester</label>
                             <select name="semester" id="semester" class="form-control" required>
+                                <option value="">Choose Semester</option>
                                 <option value="First">First</option>
                                 <option value="Second">Second</option>
                             </select>
                         </div>
                         <div class="form-group">
+                            <label for="semester">Level</label>
+                            <select name="level" id="level" class="form-control" required>
+                                <option value="">Choose level</option>
+                                <option value="100">100 Level</option>
+                                <option value="200">200 Level</option>
+                                <option value="300">300 Level</option>
+                                <option value="400">400 Level</option>
+                                <option value="500">500 Level</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label for="department_id">Department</label>
                             <select name="department_id" id="department_id" class="form-control" required>
+                                <option value="">Choose Department</option>
                                 @foreach($departments as $department)
                                     <option value="{{ $department->id }}">{{ $department->name }}</option>
                                 @endforeach

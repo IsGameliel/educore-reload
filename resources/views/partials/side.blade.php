@@ -29,7 +29,7 @@
             <div class="collapse" id="ui-basic">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/ui-features/buttons.html">Add/Manage Students</a>
+                        <a class="nav-link" href="{{ route('admin.students.index')}}">Add/Manage Students</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="pages/ui-features/dropdowns.html">Enrollment & Admissions</a>
@@ -52,7 +52,7 @@
             <div class="collapse" id="staff">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/samples/blank-page.html"> Add/Manage Staff </a>
+                        <a class="nav-link" href="{{ route('admin.staffs.index') }}"> Add/Manage Staff </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="pages/samples/login.html"> Assign Roles & Permissions </a>
@@ -84,10 +84,30 @@
                         <a class="nav-link" href="{{ route('admin.class-schedules.index')}}"> Class Schedules & Timetables </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('admin.course-materials')}}"> Lecture Materials </a>
+                        <a class="nav-link" href="{{ route('admin.course-materials.index')}}"> Lecture Materials </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="pages/samples/register.html"> Assign Instructors </a>
+                    </li>
+                </ul>
+            </div>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="collapse" href="#exams" aria-expanded="false" aria-controls="auth">
+                <span class="menu-title">Test Maker</span>
+                <i class="menu-arrow"></i>
+                <i class="mdi mdi-laptop menu-icon"></i>
+            </a>
+            <div class="collapse" id="exams">
+                <ul class="nav flex-column sub-menu">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.tests.index') }}">Tests</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="pages/samples/login.html"> Questions </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="pages/samples/register.html"> Publish Results </a>
                     </li>
                 </ul>
             </div>

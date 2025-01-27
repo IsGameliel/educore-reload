@@ -29,8 +29,8 @@
                         <div class="form-group">
                             <label for="semester">Select Semester:</label>
                             <select name="semester" id="semester" class="form-control" required>
-                                <option value="2024/2025">2024/2025</option>
-                                <option value="2025/2026">2025/2026</option>
+                                <option value="First">First</option>
+                                <option value="Second">Second</option>
                                 <!-- Add other semesters as needed -->
                             </select>
                         </div>

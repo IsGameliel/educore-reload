@@ -21,6 +21,20 @@
     <link rel="stylesheet" href="{{ asset('dash/assets/css/style.css')}}">
     <!-- End layout styles -->
     <link rel="shortcut icon" href="{{ asset('dash/assets/images/favicon.png')}}" />
+
+    <script>
+        document.addEventListener('contextmenu', (e) => e.preventDefault());
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && (e.key === 'c' || e.key === 'v' || e.key === 'x' || e.key === 'u')) {
+                e.preventDefault();
+            }
+        });
+    </script>
+    <style>
+        body {
+            user-select: none;
+        }
+    </style>
 </head>
 <body>
 <div class="container-scroller">

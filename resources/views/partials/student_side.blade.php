@@ -53,6 +53,9 @@
             <div class="collapse" id="exam">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
+                        <a class="nav-link" href="{{ route('student.tests.index')}}"> Take test </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="pages/samples/blank-page.html"> Exam Schedule </a>
                     </li>
                     <li class="nav-item">

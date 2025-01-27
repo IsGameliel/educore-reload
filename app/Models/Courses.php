@@ -15,6 +15,7 @@ class Courses extends Model
         'credit_unit',
         'semester',
         'department_id',
+        'level',
     ];
 
     // Define the relationship with the Department model (belongs to a department)

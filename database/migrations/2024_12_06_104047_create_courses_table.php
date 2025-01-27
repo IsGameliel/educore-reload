@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('code')->unique(); // Unique course code
             $table->string('title');
             $table->integer('credit_unit'); // Integer for credit unit
-            $table->enum('semester', ['First Semester', 'Second Semester']); // Restricted values
+            $table->enum('semester', ['First','Second']); // Restricted values
             $table->timestamps(); // Timestamps for tracking
         });
     }

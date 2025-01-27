@@ -1,81 +1,102 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AdminController;
-use App\Http\Controllers\StudentController;
-use App\Http\Controllers\LecturerController;
-use App\Http\Controllers\VcController;
-use App\Http\Controllers\RegistrarController;
-use App\Http\Controllers\BursarController;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\CourseRegistrationController;
-use App\Http\Controllers\CourseController;
-use App\Http\Controllers\FacultyController;
-use App\Http\Controllers\DepartmentController;
-use App\Http\Controllers\ClassScheduleController;
-use App\Http\Controllers\StudentScheduleController;
-use App\Http\Controllers\CourseMaterialController;
+use App\Http\Controllers\{
+    AdminController, StudentController, LecturerController, VcController, RegistrarController,
+    BursarController, HomeController, CourseRegistrationController, CourseController,
+    FacultyController, DepartmentController, ClassScheduleController, StudentScheduleController,
+    CourseMaterialController, TestController, StudentManagementController, StaffManagementController,
+    CustomProfileController
+};
 
-
+// Public Routes
 Route::get('/', function () {
     return view('welcome');
 });
 
-// Group routes that require authentication
+// Authenticated Routes
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
 ])->group(function () {
 
+    // Home/Dashboard
     Route::get('/home', [HomeController::class, 'index'])->name('dashboard');
 
-    // Course Registration Routes
+    // Student Routes
     Route::prefix('student')->name('student.')->group(function () {
-        // Show registration form (if needed)
-        Route::get('/courses/registration', [CourseRegistrationController::class, 'showRegistrationForm'])->name('courses.registration');
 
-        // Register for courses
-        Route::post('/courses/register', [CourseRegistrationController::class, 'registerForCourses'])->name('courses.register');
+        // Course Registration
+        Route::prefix('courses')->name('courses.')->group(function () {
+            Route::get('/registration', [CourseRegistrationController::class, 'showRegistrationForm'])->name('registration');
+            Route::post('/register', [CourseRegistrationController::class, 'registerForCourses'])->name('register');
+            Route::get('/{semester}', [CourseRegistrationController::class, 'getRegisteredCourses'])->name('registered');
+            Route::post('/withdraw', [CourseRegistrationController::class, 'withdrawFromCourse'])->name('withdraw');
+            Route::post('/queue', [CourseRegistrationController::class, 'addCourseToQueue'])->name('queue');
+            Route::get('/download/pdf', [CourseRegistrationController::class, 'downloadCoursesPDF'])->name('download.pdf');
+            Route::get('/download/excel', [CourseRegistrationController::class, 'downloadCoursesExcel'])->name('download.excel');
+        });
 
-        // View registered courses for a specific semester
-        // Route::get('/courses/summary', [CourseRegistrationController::class, 'showRegisteredCourses'])->name('courses.summary');
-        Route::get('/courses/{semester}', [CourseRegistrationController::class, 'getRegisteredCourses'])->name('courses.registered');
+        // User Profile
+        Route::get('/user/profile', [CustomProfileController::class, 'show'])->name('profile.show');
 
-        // Withdraw from a course
-        Route::post('/courses/withdraw', [CourseRegistrationController::class, 'withdrawFromCourse'])->name('courses.withdraw');
-
-        // Add course to queue (if using a queue system)
-        Route::post('/courses/queue', [CourseRegistrationController::class, 'addCourseToQueue'])->name('courses.queue');
-
-        Route::get('/courses/download/pdf', [CourseRegistrationController::class, 'downloadCoursesPDF'])->name('courses.download.pdf');
-        Route::get('/courses/download/excel', [CourseRegistrationController::class, 'downloadCoursesExcel'])->name('courses.download.excel');
-
-        Route::get('/user/profile', [\App\Http\Controllers\CustomProfileController::class, 'show'])
-            ->name('profile.show');
+        // Schedule
         Route::get('schedule', [StudentScheduleController::class, 'index'])->name('schedule');
 
+        // Course Materials
         Route::get('/course-materials', [StudentController::class, 'CourseMaterial'])->name('course-materials');
+
+        // Tests
+        Route::prefix('tests')->name('tests.')->group(function () {
+            Route::get('/', [TestController::class, 'index'])->name('index');
+            Route::get('/{testId}/start/{questionIndex?}', [TestController::class, 'startTest'])->name('start');
+            Route::post('/{testId}/start/{questionIndex?}', [TestController::class, 'storeAnswer'])->name('storeAnswer');
+            Route::post('/{testId}/submit', [TestController::class, 'submitTest'])->name('submit');
+        });
     });
 
+    // Admin Routes
     Route::prefix('admin')->name('admin.')->group(function () {
+
+        // Course Management
         Route::resource('courses', CourseController::class);
         Route::get('courses/{course}/prerequisites', [CourseController::class, 'showPrerequisites'])->name('courses.prerequisites');
         Route::post('courses/{course}/prerequisites', [CourseController::class, 'assignPrerequisites'])->name('courses.assignPrerequisites');
 
-        Route::resource('faculties', FacultyController::class);
-        Route::resource('departments', DepartmentController::class);
+        // Faculty, Department, and Class Schedule Management
+        Route::resources([
+            'faculties' => FacultyController::class,
+            'departments' => DepartmentController::class,
+            'class-schedules' => ClassScheduleController::class,
+        ]);
 
-        Route::resource('class-schedules', ClassScheduleController::class);
+        // Course Materials
+        Route::prefix('course-materials')->name('course-materials.')->group(function () {
+            Route::get('/', [CourseMaterialController::class, 'index'])->name('index');
+            Route::get('/create', [CourseMaterialController::class, 'create'])->name('create');
+            Route::post('/', [CourseMaterialController::class, 'store'])->name('store');
+            Route::get('/{id}', [CourseMaterialController::class, 'show']);
+            Route::get('/{id}/download', [CourseMaterialController::class, 'download'])->name('download');
+            Route::delete('/{id}', [CourseMaterialController::class, 'destroy'])->name('destroy');
+            Route::get('/{id}/edit', [CourseMaterialController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [CourseMaterialController::class, 'update'])->name('update');
+        });
 
-        // Course Material
-        Route::get('/course-materials', [CourseMaterialController::class, 'index'])->name('course-materials');
-        Route::get('/course-materials/create', [CourseMaterialController::class, 'create'])->name('course-materials.create');
-        Route::post('/course-materials', [CourseMaterialController::class, 'store'])->name('course-materials.store');
-        Route::get('/course-materials/{id}', [CourseMaterialController::class, 'show']);
-        Route::get('/course-materials/{id}/download', [CourseMaterialController::class, 'download']);
-        Route::delete('/course-materials/{id}', [CourseMaterialController::class, 'destroy'])->name('course-materials.destroy');
-        Route::get('admin/course-materials/{id}/edit', [CourseMaterialController::class, 'edit'])->name('course-materials.edit');
-        Route::put('admin/course-materials/{id}', [CourseMaterialController::class, 'update'])->name('course-materials.update');
+        // Test Management
+        Route::prefix('tests')->name('tests.')->group(function () {
+            Route::get('/', [TestController::class, 'adminIndex'])->name('index');
+            Route::get('/create', [TestController::class, 'create'])->name('create');
+            Route::post('/', [TestController::class, 'store'])->name('store');
+            Route::get('/{testId}/questions', [TestController::class, 'manageQuestions'])->name('questions');
+            Route::post('/{testId}/questions', [TestController::class, 'storeQuestions'])->name('questions.store');
+            Route::get('/{testId}/responses', [TestController::class, 'viewResponses'])->name('responses');
+        });
+
+        // Student and Staff Management
+        Route::resources([
+            '/students' => StudentManagementController::class,
+            '/staffs' => StaffManagementController::class,
+        ]);
     });
 });

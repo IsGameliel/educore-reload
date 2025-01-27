@@ -40,12 +40,13 @@ class CourseController extends Controller
             'credit_unit' => 'required|integer|min:1|max:10',
             'semester' => 'required|string|in:First,Second',
             'department_id' => 'required|exists:departments,id',
+            'level' => 'required|int|max:535',
         ]);
 
         // Create the course
         Courses::create($request->all());
 
-        return redirect()->route('courses.index')->with('success', 'Course created successfully!');
+        return redirect()->route('admin.courses.index')->with('success', 'Course created successfully!');
     }
 
     /**
@@ -69,11 +70,12 @@ class CourseController extends Controller
                 'credit_unit' => 'required|integer|min:1|max:10',
                 'semester' => 'required|string',
                 'department_id' => 'required|exists:departments,id',
+                'level' => 'required|int|max:225',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             dd($e->errors());
         }
-        
+
         // Update the course
         $course->update($request->all());
 

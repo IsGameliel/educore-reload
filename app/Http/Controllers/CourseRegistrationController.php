@@ -104,8 +104,9 @@ class CourseRegistrationController extends Controller
             ]);
         }
 
-        return redirect()->route('courses.registered')
+        return redirect()->route('student.courses.registered', ['semester' => $semester])
         ->with('success', 'Courses successfully registered!');
+
     }
 
     /**
@@ -113,7 +114,7 @@ class CourseRegistrationController extends Controller
      */
     private function getSemesterName($semester)
     {
-        return $semester == 1 ? 'First Semester' : 'Second Semester';
+        return $semester == 1 ? 'First' : 'Second';
     }
 
     /**
