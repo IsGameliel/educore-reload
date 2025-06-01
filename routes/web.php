@@ -68,6 +68,11 @@ Route::middleware([
         Route::get('/departments/import', [DepartmentController::class, 'showImportForm'])->name('departments.import.form');
         Route::post('/departments/import', [DepartmentController::class, 'import'])->name('departments.import');
 
+
+        Route::get('/courses/import', [CourseController::class, 'showImportForm'])->name('courses.import.form');
+        Route::post('/courses/import', [CourseController::class, 'import'])->name('courses.import');
+
+
         // Course Management
         Route::resource('courses', CourseController::class);
         Route::get('courses/{course}/prerequisites', [CourseController::class, 'showPrerequisites'])->name('courses.prerequisites');

@@ -85,7 +85,8 @@
             <div class="card">
                 <div class="card-body">
                     <a href="{{ route('admin.courses.create') }}" class="btn btn-primary">Add New Course</a>
-            
+                    <a href="{{ route('admin.courses.import.form') }}" class="btn btn-primary">Import Courses</a>
+
                     <!-- Table container for horizontal scrolling -->
                     <div style="overflow-x: auto; margin-top: 20px;">
                         <table class="table table-bordered">
@@ -126,7 +127,7 @@
                     </div>
                 </div>
             </div>
-            
+
         </div>
         </div>
     </div>

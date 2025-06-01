@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Courses;
 use Illuminate\Http\Request;
-use App\Models\Department;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\CourseImport;
+use App\Models\{
+    Department, Courses
+};
 
 class CourseController extends Controller
 {
@@ -113,6 +116,22 @@ class CourseController extends Controller
         $allCourses = Courses::all();
 
         return view('admin.courses.prerequisites', compact('course', 'prerequisites', 'allCourses'));
+    }
+
+    public function showImportForm()
+    {
+        return view('admin.courses.import');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv',
+        ]);
+
+        Excel::import(new CourseImport, $request->file('file'));
+
+        return redirect()->route('admin.courses.index')->with('success', 'Courses imported successfully!');
     }
 
 }

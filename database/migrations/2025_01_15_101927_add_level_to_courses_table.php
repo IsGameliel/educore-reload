@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('courses', function (Blueprint $table) {
-            $table->enum('level', ['100', '200', '300', '400', '500'])->nullable(); // Restricted values
+    Schema::table('courses', function (Blueprint $table) {
+            $table->enum('level', ['100', '200', '300', '400', '500'])
+                ->nullable();
         });
     }
 
@@ -22,7 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('courses', function (Blueprint $table) {
-            //
+            $table->dropColumn('level');
         });
     }
 };

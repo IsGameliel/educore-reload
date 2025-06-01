@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('courses', function (Blueprint $table) {
             $table->id();
-            $table->string('code')->unique(); // Unique course code
+            $table->string('code'); // Unique course code
             $table->string('title');
             $table->integer('credit_unit'); // Integer for credit unit
             $table->enum('semester', ['First','Second']); // Restricted values

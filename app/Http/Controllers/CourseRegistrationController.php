@@ -30,7 +30,7 @@ class CourseRegistrationController extends Controller
     {
         $user = Auth::user(); // Get the authenticated student
         $departmentId = $user->department_id;
-        $courses = Courses::where('department_id', $departmentId)->get();
+        $courses = Courses::where('department_id', $departmentId)->where('level', $user->level)->get();
         $departments = Department::all();
 
         return view('student.coursereg.create', compact('courses', 'departments'));
