@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Faculty;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\FacultyImport;
+
 
 class FacultyController extends Controller
 {
@@ -54,5 +57,21 @@ class FacultyController extends Controller
     public function destroy(Faculty $faculty){
         $faculty->delete();
         return redirect()->route('admin.faculties.index')->with('success', 'Faculty deleted successfully');
+    }
+
+    public function showImportForm()
+    {
+        return view('admin.faculties.import');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv',
+        ]);
+
+        Excel::import(new FacultyImport, $request->file('file'));
+
+        return redirect()->route('admin.faculties.index')->with('success', 'Faculties imported successfully!');
     }
 }

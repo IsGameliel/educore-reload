@@ -28,7 +28,7 @@ class TestController extends Controller
 
         // Ensure the question index is within range
         if ($questionIndex < 0 || $questionIndex >= $questions->count()) {
-            return redirect()->route('student.test.index')->with('error', 'Invalid question index.');
+            return redirect()->route('student.tests.index')->with('error', 'Invalid question index.');
         }
 
         $question = $questions[$questionIndex];
@@ -37,65 +37,49 @@ class TestController extends Controller
         return view('student.test.start', compact('test', 'question', 'questionIndex', 'end_time'));
     }
 
-
-    // public function storeAnswer(Request $request, $testId, $questionIndex)
-    // {
-    //     $test = Tests::with('questions')->findOrFail($testId);
-    //     $questions = $test->questions;
-
-    //     if ($questionIndex < 0 || $questionIndex >= $questions->count()) {
-    //         return redirect()->route('student.tests.index')->with('error', 'Invalid question index.');
-    //     }
-
-    //     // Save the answer in the session
-    //     $submittedAnswer = $request->input('answer');
-    //     $currentAnswers = session("test_{$testId}_answers", []);
-    //     $currentAnswers[$questions[$questionIndex]->id] = $submittedAnswer;
-    //     session(["test_{$testId}_answers" => $currentAnswers]);
-
-    //     $nextIndex = $questionIndex + 1;
-
-    //     // If there are more questions, proceed to the next one
-    //     if ($nextIndex < $questions->count()) {
-    //         return redirect()->route('student.tests.start', [$testId, $nextIndex])
-    //             ->with('success', 'Answer saved. Proceeding to the next question.');
-    //     }
-
-    //     // If it's the last question, proceed to submission
-    //     return redirect()->route('tests.submit', [$testId]);
-    // }
-
     public function storeAnswer(Request $request, $testId, $questionIndex = 0)
-    {
-        $test = Tests::findOrFail($testId);
+{
+    \Log::info('storeAnswer started', ['testId' => $testId, 'questionIndex' => $questionIndex]);
 
-        // Retrieve or initialize session answers
-        $sessionKey = "test_{$testId}_answers";
-        $answers = session($sessionKey, []);
+    $test = Tests::findOrFail($testId);
 
-        // Save the submitted answer for the current question
-        $submittedAnswer = $request->input("answers.{$questionIndex}");
-        if ($submittedAnswer === null) {
-            return back()->with('error', 'Please select an answer before proceeding.');
-        }
+    // Retrieve or initialize session answers
+    $sessionKey = "test_{$testId}_answers";
+    $answers = session($sessionKey, []);
 
-        // Update session answers
-        $answers[$test->questions[$questionIndex]->id] = $submittedAnswer;
-        session([$sessionKey => $answers]);
+    // Log answers and incoming data
+    \Log::info('Session answers:', ['answers' => $answers]);
 
-        // Log updated answers for debugging
-        \Log::info('Answers updated:', ['answers' => $answers]);
+    // Explicitly check the correct input key for the submitted answer
+    $submittedAnswer = $request->input("answers.{$test->questions[$questionIndex]->id}");
+    \Log::info('Submitted Answer:', ['submittedAnswer' => $submittedAnswer]);
 
-        // Check if there are more questions
-        $nextIndex = $questionIndex + 1;
-        if ($nextIndex < $test->questions->count()) {
-            return redirect()->route('tests.start', [$testId, $nextIndex])
-                            ->with('success', 'Answer saved. Moving to the next question.');
-        }
-
-        // Redirect to submit the test
-        return redirect()->route('tests.submit', [$testId]);
+    if ($submittedAnswer === null) {
+        \Log::warning('No answer selected');
+        return response()->json(['success' => false, 'message' => 'Please select an answer before proceeding.']);
     }
+
+    // Update session answers
+    $answers[$test->questions[$questionIndex]->id] = $submittedAnswer;
+    session([$sessionKey => $answers]);
+
+    \Log::info('Answers updated in session', ['answers' => $answers]);
+
+    // Check if there are more questions
+    $nextIndex = $questionIndex + 1;
+    if ($nextIndex < $test->questions->count()) {
+        \Log::info('Proceeding to next question', ['nextIndex' => $nextIndex]);
+        $nextUrl = route('tests.start', [$testId, $nextIndex]);
+        return response()->json(['success' => true, 'nextUrl' => $nextUrl]);
+    }
+
+    \Log::info('Test submission', ['testId' => $testId]);
+    $submitUrl = route('tests.submit', [$testId]);
+    return response()->json(['success' => true, 'nextUrl' => $submitUrl]);
+}
+
+
+
 
     // Handle final submission of the test
     public function submitTest(Request $request, $testId)
@@ -166,9 +150,37 @@ class TestController extends Controller
             'duration' => 'required|integer',
             'level' => 'required|string',
             'department_id' => 'required|exists:departments,id',
+            'status' => 'required|boolean',
         ]));
 
         return redirect()->route('admin.tests.index')->with('success', 'Test created successfully');
+    }
+
+    // Edit Test
+    public function edit($id)
+    {
+        $test = Tests::findOrFail($id);
+        $departments = Department::all();
+        return view('admin.tests.edit', compact('test', 'departments'));
+    }
+
+    // Update Test
+    public function update(Request $request, $id)
+    {
+        $test = Tests::findOrFail($id);
+
+        $validatedData = $request->validate([
+            'name' => 'required|string',
+            'subject' => 'required|string',
+            'duration' => 'required|integer',
+            'level' => 'required|string',
+            'department_id' => 'required|exists:departments,id',
+            'status' => 'required|boolean',
+        ]);
+
+        $test->update($validatedData);
+
+        return redirect()->route('admin.tests.index')->with('success', 'Test updated successfully');
     }
 
     public function manageQuestions($testId)
@@ -190,6 +202,34 @@ class TestController extends Controller
 
         return back()->with('success', 'Question added successfully');
     }
+
+    // Edit Question
+    public function editQuestion($testId, $questionId)
+    {
+        $test = Tests::findOrFail($testId);
+        $question = $test->questions()->findOrFail($questionId);
+
+        return view('admin.tests.edit-question', compact('test', 'question'));
+    }
+
+    // Update Question
+    public function updateQuestion(Request $request, $testId, $questionId)
+    {
+        $test = Tests::findOrFail($testId);
+        $question = $test->questions()->findOrFail($questionId);
+
+        $validatedData = $request->validate([
+            'question_text' => 'required|string',
+            'options' => 'required|array',
+            'correct_option' => 'required|string|in:' . implode(',', array_keys($request->options)),
+            'marks' => 'required|integer',
+        ]);
+
+        $question->update($validatedData);
+
+        return redirect()->route('admin.tests.questions', $testId)->with('success', 'Question updated successfully');
+    }
+
 
     public function viewResponses($testId)
     {

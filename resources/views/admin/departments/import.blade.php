@@ -8,7 +8,7 @@
                 <h3 class="page-title">
                     <span class="page-title-icon bg-gradient-primary text-white me-2">
                         <i class="mdi mdi-home"></i>
-                    </span> Create Department
+                    </span> Import Department
                 </h3>
                 <nav aria-label="breadcrumb">
                     <ul class="breadcrumb">
@@ -22,23 +22,14 @@
             <!-- Registration Form -->
             <div class="card">
                 <div class="card-body">
-                    <form action="{{ route('admin.departments.store') }}" method="POST">
+                    @if(session('success'))
+                            <p style="color: green">{{ session('success') }}</p>
+                    @endif
+                    <form action="{{ route('admin.departments.import') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="form-group">
-                            <label for="name">Department Name</label>
-                            <input type="text" name="name" id="name" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="code">Department Description</label>
-                            <input type="text" name="description" id="description" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="faculty_id">Faculty</label>
-                            <select name="faculty_id" id="faculty_id" class="form-control" required>
-                                @foreach($faculties as $faculty)
-                                    <option value="{{ $faculty->id }}">{{ $faculty->name }}</option>
-                                @endforeach
-                            </select>
+                            <label for="name">Department Import File</label>
+                            <input type="file" name="file" class="form-control" required>
                         </div>
                         <button type="submit" class="btn btn-success">Save</button>
                     </form>

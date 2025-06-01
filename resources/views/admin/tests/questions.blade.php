@@ -53,17 +53,34 @@
                     <h3 class="mt-5">Existing Questions</h3>
                     <ul class="list-group">
                         @foreach ($test->questions as $question)
-                            <li class="list-group-item">
-                                <strong>{{ $loop->iteration }}. {{ $question->question_text }}</strong>
-                                <ul>
-                                    @foreach ($question->options as $index => $option)
-                                        <li>{{ $index + 1 }}. {{ $option }}</li>
-                                    @endforeach
-                                </ul>
-                                <p>Correct Answer: Option {{ $question->correct_option }}</p>
+                            <li class="list-group-item d-flex justify-content-between align-items-start">
+                                <div class="ms-2 me-auto">
+                                    <div class="fw-bold">{{ $loop->iteration }}. {{ $question->question_text }}</div>
+                                    <ul>
+                                        @foreach ($question->options as $index => $option)
+                                            <li>{{ $index + 1 }}. {{ $option }}</li>
+                                        @endforeach
+                                    </ul>
+                                    <p>Correct Answer: Option {{ $question->correct_option }}</p>
+                                    <p>Marks: {{ $question->marks }}</p>
+                                </div>
+
+                                <!-- Edit Button -->
+                                <a href="{{ route('admin.tests.questions.edit', [$test->id, $question->id]) }}"
+                                class="btn btn-info btn-sm me-2">
+                                    Edit
+                                </a>
+
+                                <!-- Delete Button -->
+                                <form action="{{ route('admin.tests.questions.delete', [$test->id, $question->id]) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this question?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
                             </li>
                         @endforeach
                     </ul>
+
                 </div>
             </div>
 

@@ -30,15 +30,11 @@
                         <div id="timer" class="alert alert-warning text-center mt-3"></div>
                         <!-- Form for submitting answers and moving to the next question -->
                         <form
-                        action="{{ $questionIndex + 1 < $test->questions->count()
-                        ? route('student.tests.storeAnswer', [$test->id, $questionIndex])
-                        : route('student.tests.submit', $test->id) }}"
-
+                            action="{{ route('student.tests.storeAnswer', [$test->id, $questionIndex]) }}"
                             method="POST"
                             id="question-form">
                             @csrf
 
-                            <!-- Question options -->
                             @foreach ($question->options as $key => $option)
                                 <div class="form-check">
                                     <input
@@ -55,18 +51,11 @@
                             @endforeach
 
                             <div class="mt-3">
-                                @if ($questionIndex > 0)
-                                    <a href="{{ route('student.tests.start', [$test->id, $questionIndex - 1]) }}"
-                                    class="btn btn-secondary">
-                                        Previous
-                                    </a>
-                                @endif
-                                <button type="submit" class="btn btn-primary">
+                                <button type="button" id="next-btn" class="btn btn-primary">
                                     {{ $questionIndex + 1 < $test->questions->count() ? 'Next' : 'Submit Test' }}
                                 </button>
                             </div>
-                            </form>
-
+                        </form>
 
                     </div>
                 </div>
@@ -74,25 +63,66 @@
                 <script>
                     const endTime = new Date("{{ $end_time }}").getTime();
 
-                    const timer = setInterval(() => {
-                        const now = new Date().getTime();
-                        const remaining = endTime - now;
+                    function startTimer() {
+                        const storedTime = sessionStorage.getItem('remainingTime');
+                        let remainingTime = storedTime ? parseInt(storedTime) : endTime - new Date().getTime();
 
-                        if (remaining <= 0) {
-                            clearInterval(timer);
-                            document.getElementById('question-form').submit(); // Auto-submit on time out
-                        }
+                        const timer = setInterval(() => {
+                            const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+                            const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
 
-                        const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-                        const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
-                        document.getElementById('timer').innerText = `Time Remaining: ${minutes}:${seconds}`;
-                    }, 1000);
+                            document.getElementById('timer').innerText = `Time Remaining: ${minutes}:${seconds}`;
+                            sessionStorage.setItem('remainingTime', remainingTime);
+
+                            if (remainingTime <= 0) {
+                                clearInterval(timer);
+                                document.getElementById('question-form').submit();
+                            }
+
+                            remainingTime -= 1000;
+                        }, 1000);
+                    }
+
+                    document.addEventListener('DOMContentLoaded', () => {
+                        document.getElementById('next-btn').addEventListener('click', () => {
+                            const form = document.getElementById('question-form');
+                            const formData = new FormData(form);
+
+                            // Log the form data before sending
+                            for (let [key, value] of formData.entries()) {
+                                console.log(key, value);  // This will log the form data
+                            }
+
+                            fetch(form.action, {
+                                method: "POST",
+                                headers: {
+                                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                                },
+                                body: formData,
+                            })
+                            .then((response) => response.json())
+                            .then((data) => {
+                                if (data.success) {
+                                    window.location.href = data.nextUrl;
+                                } else {
+                                    alert(data.message || "An error occurred. Please try again.");
+                                }
+                            })
+                            .catch((error) => {
+                                console.error("Error:", error);
+                                alert("An error occurred. Please try again.");
+                            });
+                        });
+
+                    });
+
+
                 </script>
             </div>
         </div>
     </div>
 </div>
-</div
+</div>
 </div>
 
 @endsection

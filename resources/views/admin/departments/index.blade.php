@@ -23,7 +23,8 @@
             <div class="card">
                 <div class="card-body">
                     <a href="{{ route('admin.departments.create') }}" class="btn btn-primary">Add New Department</a>
-            
+                    <a href="{{ route('admin.departments.import.form') }}" class="btn btn-primary">Import Departments</a>
+
                     <!-- Table container for horizontal scrolling -->
                     <div style="overflow-x: auto; margin-top: 20px;">
                         <table class="table mt-3">
@@ -55,11 +56,11 @@
                         </table>
                     </div>
                     <div class="pagination-container">
-                        {{ $departments->links() }}                
+                        {{ $departments->links() }}
                     </div>
                 </div>
             </div>
-            
+
         </div>
         </div>
     </div>

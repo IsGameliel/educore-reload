@@ -1,10 +1,12 @@
 <?php
 
 namespace App\Http\Controllers;
-
-use App\Models\Department;
-use App\Models\Faculty;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\DepartmentImport;
+use App\Models\{
+    Department, Faculty
+};
 
 class DepartmentController extends Controller
 {
@@ -27,7 +29,6 @@ class DepartmentController extends Controller
             'description' => 'required|string|max:5000',
             'faculty_id' => 'required|exists:faculties,id',
         ]);
-
         Department::create($request->all());
 
         return redirect()->route('admin.departments.index')->with('success', 'Department created successfully!');
@@ -62,5 +63,21 @@ class DepartmentController extends Controller
         $department->delete();
 
         return redirect()->route('admin.departments.index')->with('success', 'Department deleted successfully!');
+    }
+
+    public function showImportForm()
+    {
+        return view('admin.departments.import');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv',
+        ]);
+
+        Excel::import(new DepartmentImport, $request->file('file'));
+
+        return redirect()->route('admin.departments.index')->with('success', 'Departments imported successfully!');
     }
 }
