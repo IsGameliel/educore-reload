@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Tests;
-use App\Models\Questions;
-use App\Models\Responses;
-use App\Models\Department;
+use App\Models\{
+    Tests, Questions, Responses, Department, Courses
+};
 use Illuminate\Http\Request;
 
 class TestController extends Controller
@@ -24,10 +23,29 @@ class TestController extends Controller
     public function startTest($testId, $questionIndex = 0)
     {
         $test = Tests::with('questions')->findOrFail($testId);
+
+        // Check if already submitted
+        $existing = Responses::where('test_id', $testId)
+            ->where('student_id', auth()->id())
+            ->first();
+
+        if ($existing) {
+            // Always show result if already submitted
+            $score = $existing->score;
+            return view('student.test.result', compact('test', 'score'))
+                ->with('total_marks', $test->questions->sum('marks'));
+        }
+
         $questions = $test->questions;
 
         // Ensure the question index is within range
         if ($questionIndex < 0 || $questionIndex >= $questions->count()) {
+            // If answers exist in session, redirect to submit
+            $answers = session("test_{$testId}_answers", []);
+            if (!empty($answers)) {
+                return redirect()->route('student.tests.submit', [$testId]);
+            }
+            // Otherwise, show a friendly message or redirect to index
             return redirect()->route('student.tests.index')->with('error', 'Invalid question index.');
         }
 
@@ -37,47 +55,54 @@ class TestController extends Controller
         return view('student.test.start', compact('test', 'question', 'questionIndex', 'end_time'));
     }
 
-    public function storeAnswer(Request $request, $testId, $questionIndex = 0)
-{
-    \Log::info('storeAnswer started', ['testId' => $testId, 'questionIndex' => $questionIndex]);
+   public function storeAnswer(Request $request, $testId, $questionIndex = 0)
+    {
+        \Log::info('storeAnswer started', ['testId' => $testId, 'questionIndex' => $questionIndex]);
 
-    $test = Tests::findOrFail($testId);
+        $test = Tests::findOrFail($testId);
 
-    // Retrieve or initialize session answers
-    $sessionKey = "test_{$testId}_answers";
-    $answers = session($sessionKey, []);
+        // Prevent retake: check if already submitted
+        $existing = Responses::where('test_id', $testId)
+            ->where('student_id', auth()->id())
+            ->first();
+        if ($existing) {
+            return response()->json(['success' => false, 'message' => 'You have already taken this test.']);
+        }
 
-    // Log answers and incoming data
-    \Log::info('Session answers:', ['answers' => $answers]);
+        // Retrieve or initialize session answers
+        $sessionKey = "test_{$testId}_answers";
+        $answers = session($sessionKey, []);
 
-    // Explicitly check the correct input key for the submitted answer
-    $submittedAnswer = $request->input("answers.{$test->questions[$questionIndex]->id}");
-    \Log::info('Submitted Answer:', ['submittedAnswer' => $submittedAnswer]);
+        // Log answers and incoming data
+        \Log::info('Session answers:', ['answers' => $answers]);
 
-    if ($submittedAnswer === null) {
-        \Log::warning('No answer selected');
-        return response()->json(['success' => false, 'message' => 'Please select an answer before proceeding.']);
+        // Explicitly check the correct input key for the submitted answer
+        $submittedAnswer = $request->input("answers.{$test->questions[$questionIndex]->id}");
+        \Log::info('Submitted Answer:', ['submittedAnswer' => $submittedAnswer]);
+
+        if ($submittedAnswer === null) {
+            \Log::warning('No answer selected');
+            return response()->json(['success' => false, 'message' => 'Please select an answer before proceeding.']);
+        }
+
+        // Update session answers
+        $answers[$test->questions[$questionIndex]->id] = $submittedAnswer;
+        session([$sessionKey => $answers]);
+
+        \Log::info('Answers updated in session', ['answers' => $answers]);
+
+        // Check if there are more questions
+        $nextIndex = $questionIndex + 1;
+        if ($nextIndex < $test->questions->count()) {
+            $nextUrl = route('student.tests.start', [$testId, $nextIndex]);
+            return response()->json(['success' => true, 'nextUrl' => $nextUrl]);
+        }
+
+
+        \Log::info('Test submission', ['testId' => $testId]);
+        $submitUrl = route('student.tests.submit', [$testId]);
+        return response()->json(['success' => true, 'nextUrl' => $submitUrl]);
     }
-
-    // Update session answers
-    $answers[$test->questions[$questionIndex]->id] = $submittedAnswer;
-    session([$sessionKey => $answers]);
-
-    \Log::info('Answers updated in session', ['answers' => $answers]);
-
-    // Check if there are more questions
-    $nextIndex = $questionIndex + 1;
-    if ($nextIndex < $test->questions->count()) {
-        \Log::info('Proceeding to next question', ['nextIndex' => $nextIndex]);
-        $nextUrl = route('tests.start', [$testId, $nextIndex]);
-        return response()->json(['success' => true, 'nextUrl' => $nextUrl]);
-    }
-
-    \Log::info('Test submission', ['testId' => $testId]);
-    $submitUrl = route('tests.submit', [$testId]);
-    return response()->json(['success' => true, 'nextUrl' => $submitUrl]);
-}
-
 
 
 
@@ -86,32 +111,34 @@ class TestController extends Controller
     {
         $test = Tests::with('questions')->findOrFail($testId);
 
+        // Check if already submitted
+        $existing = Responses::where('test_id', $testId)
+            ->where('student_id', auth()->id())
+            ->first();
+
+        if ($existing) {
+            // Show result if already submitted
+            $score = $existing->score;
+            return view('student.test.result', compact('test', 'score'))
+                ->with('total_marks', $test->questions->sum('marks'));
+        }
+
         // Retrieve answers from session
         $answers = session("test_{$testId}_answers", []);
 
-        // Log the submitted answers for debugging
-        \Log::info('Submitted Answers:', ['answers' => $answers]);
-
-        $score = 0;
-
-        foreach ($test->questions as $question) {
-            $submittedAnswer = $answers[$question->id] ?? null;
-
-            // Log question and answer for debugging
-            \Log::info('Evaluating Question:', [
-                'question_id' => $question->id,
-                'submitted_answer' => $submittedAnswer,
-                'correct_option' => $question->correct_option,
-            ]);
-
-            // Compare answers (ensure type consistency)
-            if ((string)$submittedAnswer === (string)$question->correct_option) {
-                $score += $question->marks; // Add the question's marks to the score
-            }
+        // If no answers in session and no previous submission, show error
+        if (empty($answers)) {
+            return redirect()->route('student.tests.index')->with('error', 'No answers found for submission.');
         }
 
-        // Log final score
-        \Log::info('Final Score:', ['score' => $score]);
+        // Calculate score
+        $score = 0;
+        foreach ($test->questions as $question) {
+            $submittedAnswer = $answers[$question->id] ?? null;
+            if ((string)$submittedAnswer === (string)$question->correct_option) {
+                $score += $question->marks;
+            }
+        }
 
         // Save the result to the database
         Responses::create([
@@ -124,7 +151,7 @@ class TestController extends Controller
         // Clear session data for the test
         session()->forget("test_{$testId}_answers");
 
-        // Redirect to the result view
+        // Show result
         return view('student.test.result', compact('test', 'score'))
             ->with('total_marks', $test->questions->sum('marks'));
     }
@@ -139,7 +166,8 @@ class TestController extends Controller
     public function create()
     {
         $departments = Department::all();
-        return view('admin.tests.create', compact('departments'));
+        $courses = Courses::all();
+        return view('admin.tests.create', compact('departments', 'courses'));
     }
 
     public function store(Request $request)

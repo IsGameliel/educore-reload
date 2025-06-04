@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Department;
 use App\Models\Faculty;
-use App\Models\courseMaterial;
-use App\Models\courses;
+use App\Models\CourseMaterial;
+use App\Models\Courses;
 use App\Models\ClassSchedule;
 
 class HomeController extends Controller

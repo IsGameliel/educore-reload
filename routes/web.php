@@ -53,7 +53,8 @@ Route::middleware([
             // Test-taking routes
             Route::get('/{testId}/{questionIndex?}', [TestController::class, 'startTest'])->name('start'); // Start test and show a question
             Route::post('/{testId}/{questionIndex}', [TestController::class, 'storeAnswer'])->name('storeAnswer'); // Store answer for a question
-            Route::post('/{testId}/submit', [TestController::class, 'submitTest'])->name('submit'); // Submit the test
+            Route::get('/{testId}/submit', [TestController::class, 'submitTest'])->name('submit');
+            Route::post('/{testId}/submit', [TestController::class, 'submitTest']);
         });
     });
 

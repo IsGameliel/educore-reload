@@ -87,7 +87,7 @@
     <div class="container">
         <!-- Logo Section -->
         <div class="logo">
-            <h1>Educore School management system</h1>
+            <h1>Mudiame University Irrua</h1>
         </div>
 
         <div class="header">
@@ -137,6 +137,16 @@
                 </tr>
             </table>
         </div>
+        <footer>
+            <footer class="footer">
+            <div class="d-sm-flex justify-content-center justify-content-sm-between">
+                <center>
+                    <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2025 <a href="#" target="_blank">codewitheugene</a>. All rights reserved.</span>
+                    <span class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center">Coding made simple <i class="mdi mdi-heart text-danger"></i></span>
+                </center>
+            </div>
+        </footer>
+        </footer>
     </div>
 </body>
 </html>

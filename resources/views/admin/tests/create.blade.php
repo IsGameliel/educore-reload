@@ -29,12 +29,22 @@
                         <input type="text" name="name" id="name" class="form-control" required>
                     </div>
                     <div class="mb-3">
-                        <label for="subject" class="form-label">Subject</label>
-                        <input type="text" name="subject" id="subject" class="form-control" required>
+                        <label for="subject" class="form-label">course</label>
+                        <select name="subject" id="subject-select" class="form-control">
+                            @foreach($courses as $course)
+                                <option value="{{ $course->title }}">{{ $course->title }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label for="level" class="form-label">Level</label>
-                        <input type="text" name="level" id="level" class="form-control" placeholder="e.g., 100" required>
+                        <select name="level" class="form-control" id="">
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                            <option value="300">300</option>
+                            <option value="400">400</option>
+                            <option value="500">500</option>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label for="department_id" class="form-label">Department</label>
@@ -62,4 +72,15 @@
     </div>
 </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    $(document).ready(function() {
+        $('#subject-select').select2({
+            placeholder: "Select a course",
+            allowClear: true
+        });
+    });
+</script>
 @endsection

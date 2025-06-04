@@ -104,30 +104,30 @@
                         <a class="nav-link" href="{{ route('admin.tests.index') }}">Tests</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/samples/login.html"> Questions </a>
+                        <a class="nav-link" href="#"> Questions </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/samples/register.html"> Publish Results </a>
+                        <a class="nav-link" href="#"> Publish Results </a>
                     </li>
                 </ul>
             </div>
         </li>
         <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="collapse" href="#exams" aria-expanded="false" aria-controls="auth">
+            <a class="nav-link" data-bs-toggle="collapse" href="#assessments" aria-expanded="false" aria-controls="auth">
                 <span class="menu-title">Exams & Assessments</span>
                 <i class="menu-arrow"></i>
                 <i class="mdi mdi-lead-pencil menu-icon"></i>
             </a>
-            <div class="collapse" id="exams">
+            <div class="collapse" id="assessments">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/samples/blank-page.html"> Create Exam Schedules </a>
+                        <a class="nav-link" href="#"> Create Exam Schedules </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/samples/login.html"> Manage Grades & Results </a>
+                        <a class="nav-link" href="#"> Manage Grades & Results </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/samples/register.html"> Publish Results </a>
+                        <a class="nav-link" href="#"> Publish Results </a>
                     </li>
                 </ul>
             </div>
@@ -141,13 +141,13 @@
             <div class="collapse" id="finance">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/samples/blank-page.html"> Fee Structure & Billing </a>
+                        <a class="nav-link" href="#"> Fee Structure & Billing </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/samples/login.html"> Payment Tracking </a>
+                        <a class="nav-link" href="#"> Payment Tracking </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/samples/register.html"> Scholarships & Discounts </a>
+                        <a class="nav-link" href="#"> Scholarships & Discounts </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="pages/samples/register.html"> Generate Invoices & Receipts </a>

@@ -56,13 +56,13 @@
                         <a class="nav-link" href="{{ route('student.tests.index')}}"> Take test </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/samples/blank-page.html"> Exam Schedule </a>
+                        <a class="nav-link" href="#"> Exam Schedule </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/samples/login.html"> View Results </a>
+                        <a class="nav-link" href="#"> View Results </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/samples/register.html"> Download Result </a>
+                        <a class="nav-link" href="#"> Download Result </a>
                     </li>
                 </ul>
             </div>
@@ -76,16 +76,16 @@
             <div class="collapse" id="fee">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/samples/blank-page.html"> Fee Structure </a>
+                        <a class="nav-link" href="#"> Fee Structure </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/samples/login.html"> Payment History </a>
+                        <a class="nav-link" href="#"> Payment History </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/samples/register.html"> Make a Payment </a>
+                        <a class="nav-link" href="#"> Make a Payment </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/samples/register.html"> Generate Fee Receipts </a>
+                        <a class="nav-link" href="#"> Generate Fee Receipts </a>
                     </li>
                 </ul>
             </div>
@@ -99,13 +99,13 @@
             <div class="collapse" id="lib">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/samples/blank-page.html"> Search for Books </a>
+                        <a class="nav-link" href="#"> Search for Books </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/samples/login.html"> Borrowed Books </a>
+                        <a class="nav-link" href="#"> Borrowed Books </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/samples/register.html"> Due Dates & Fines</a>
+                        <a class="nav-link" href="#"> Due Dates & Fines</a>
                     </li>
                 </ul>
             </div>
@@ -119,10 +119,10 @@
             <div class="collapse" id="event">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/samples/blank-page.html"> Upcoming Events </a>
+                        <a class="nav-link" href="#"> Upcoming Events </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/samples/login.html"> Club/Association Memberships </a>
+                        <a class="nav-link" href="#"> Club/Association Memberships </a>
                     </li>
                 </ul>
             </div>

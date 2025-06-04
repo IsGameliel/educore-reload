@@ -8,7 +8,7 @@
             <h3 class="page-title">
                 <span class="page-title-icon bg-gradient-primary text-white me-2">
                     <i class="mdi mdi-home"></i>
-                </span> Course Registration
+                </span> Test Portal
             </h3>
             <nav aria-label="breadcrumb">
                 <ul class="breadcrumb">
@@ -60,64 +60,69 @@
                     </div>
                 </div>
 
-                <script>
-                    const endTime = new Date("{{ $end_time }}").getTime();
+               <script>
+                const endTime = new Date("{{ $end_time }}").getTime();
 
-                    function startTimer() {
-                        const storedTime = sessionStorage.getItem('remainingTime');
-                        let remainingTime = storedTime ? parseInt(storedTime) : endTime - new Date().getTime();
+                function startTimer() {
+                    const storedTime = sessionStorage.getItem('remainingTime');
+                    let remainingTime = storedTime ? parseInt(storedTime) : endTime - new Date().getTime();
 
-                        const timer = setInterval(() => {
-                            const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
-                            const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
-
-                            document.getElementById('timer').innerText = `Time Remaining: ${minutes}:${seconds}`;
-                            sessionStorage.setItem('remainingTime', remainingTime);
-
-                            if (remainingTime <= 0) {
-                                clearInterval(timer);
-                                document.getElementById('question-form').submit();
-                            }
-
-                            remainingTime -= 1000;
-                        }, 1000);
+                    // Only set up the timer if time remains
+                    if (remainingTime <= 0) {
+                        window.location.href = "{{ route('student.tests.submit', [$test->id]) }}";
+                        return;
                     }
 
-                    document.addEventListener('DOMContentLoaded', () => {
-                        document.getElementById('next-btn').addEventListener('click', () => {
-                            const form = document.getElementById('question-form');
-                            const formData = new FormData(form);
+                    const timer = setInterval(() => {
+                        const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
 
-                            // Log the form data before sending
-                            for (let [key, value] of formData.entries()) {
-                                console.log(key, value);  // This will log the form data
+                        document.getElementById('timer').innerText = `Time Remaining: ${minutes}:${seconds}`;
+                        sessionStorage.setItem('remainingTime', remainingTime);
+
+                        if (remainingTime <= 0) {
+                            clearInterval(timer);
+                            sessionStorage.removeItem('remainingTime');
+                            window.location.href = "{{ route('student.tests.submit', [$test->id]) }}";
+                        }
+
+                        remainingTime -= 1000;
+                    }, 1000);
+                }
+
+                document.addEventListener('DOMContentLoaded', () => {
+                    startTimer();
+                    document.getElementById('next-btn').addEventListener('click', () => {
+                        const form = document.getElementById('question-form');
+                        const formData = new FormData(form);
+                        const btn = document.getElementById('next-btn');
+                        btn.disabled = true;
+
+                        fetch(form.action, {
+                            method: "POST",
+                            headers: {
+                                "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                            },
+                            body: formData,
+                        })
+                        .then((response) => response.json())
+                        .then((data) => {
+                            if (data.success) {
+                                sessionStorage.removeItem('remainingTime'); // Clear timer on submit
+                                window.location.href = data.nextUrl;
+                            } else {
+                                alert(data.message || "An error occurred. Please try again.");
+                                btn.disabled = false; // Re-enable if error
                             }
-
-                            fetch(form.action, {
-                                method: "POST",
-                                headers: {
-                                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                                },
-                                body: formData,
-                            })
-                            .then((response) => response.json())
-                            .then((data) => {
-                                if (data.success) {
-                                    window.location.href = data.nextUrl;
-                                } else {
-                                    alert(data.message || "An error occurred. Please try again.");
-                                }
-                            })
-                            .catch((error) => {
-                                console.error("Error:", error);
-                                alert("An error occurred. Please try again.");
-                            });
+                        })
+                        .catch((error) => {
+                            console.error("Error:", error);
+                            alert("An error occurred. Please try again.");
+                            btn.disabled = false; // Re-enable if error
                         });
-
                     });
-
-
-                </script>
+                });
+            </script>
             </div>
         </div>
     </div>

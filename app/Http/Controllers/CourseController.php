@@ -17,7 +17,7 @@ class CourseController extends Controller
     public function index()
     {
         // Fetch all courses with their associated departments
-        $courses = Courses::with('department')->paginate(10); // Paginated for better UI
+        $courses = Courses::with('department')->paginate(30); // Paginated for better UI
         return view('admin.courses.index', compact('courses'));
     }
 
@@ -38,7 +38,7 @@ class CourseController extends Controller
     {
         // Validate input data
         $request->validate([
-            'code' => 'required|string|max:10|unique:courses,code',
+            'code' => 'required|string|max:10',
             'title' => 'required|string|max:255',
             'credit_unit' => 'required|integer|min:1|max:10',
             'semester' => 'required|string|in:First,Second',
@@ -68,7 +68,7 @@ class CourseController extends Controller
     {
         try {
             $request->validate([
-                'code' => 'required|string|max:10|unique:courses,code,' . $course->id,
+                'code' => 'required|string|max:10',
                 'title' => 'required|string|max:255',
                 'credit_unit' => 'required|integer|min:1|max:10',
                 'semester' => 'required|string',
