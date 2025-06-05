@@ -124,15 +124,15 @@
                 <tr>
                     <td>
                         <div class="signature-line"></div>
-                        <p>Student</p>
-                    </td>
-                    <td>
-                        <div class="signature-line"></div>
-                        <p>Course Adviser</p>
-                    </td>
-                    <td>
-                        <div class="signature-line"></div>
                         <p>HOD</p>
+                    </td>
+                    <td>
+                        <div class="signature-line"></div>
+                        <p>DAP</p>
+                    </td>
+                    <td>
+                        <div class="signature-line"></div>
+                        <p>Academic Affairs</p>
                     </td>
                 </tr>
             </table>
