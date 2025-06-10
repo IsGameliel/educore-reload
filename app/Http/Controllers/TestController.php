@@ -6,6 +6,7 @@ use App\Models\{
     Tests, Questions, Responses, Department, Courses
 };
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class TestController extends Controller
 {
@@ -20,40 +21,84 @@ class TestController extends Controller
     }
 
     // Display a single question for the test (GET)
-   public function startTest($testId, $questionIndex = 0)
-    {
-        \Log::info('startTest called', ['testId' => $testId, 'questionIndex' => $questionIndex]);
+    // In startTest
+public function startTest($testId, $questionIndex = 0)
+{
+    Log::info('startTest called', ['testId' => $testId, 'questionIndex' => $questionIndex]);
 
-        $test = Tests::with('questions')->findOrFail($testId);
+    $test = Tests::with('questions')->findOrFail($testId);
 
-        // Check if already submitted
-        $existing = Responses::where('test_id', $testId)
-            ->where('student_id', auth()->id())
-            ->first();
+    // Check if already submitted
+    $existing = Responses::where('test_id', $testId)
+        ->where('student_id', auth()->id())
+        ->first();
 
-        if ($existing) {
-            $score = $existing->score;
-            return view('student.test.result', compact('test', 'score'))
-                ->with('total_marks', $test->questions->sum('marks'));
-        }
-
-        $questions = $test->questions;
-
-        // Check if question index is valid
-        if (!is_numeric($questionIndex) || $questionIndex < 0 || $questionIndex >= $questions->count()) {
-            \Log::info('Redirecting to confirmation page', ['testId' => $testId]);
-            return view('student.test.confirm_submission', compact('test'));
-        }
-
-        $question = $questions[$questionIndex];
-        $end_time = now()->addMinutes($test->duration)->toISOString();
-
-        return view('student.test.start', compact('test', 'question', 'questionIndex', 'end_time'));
+    if ($existing) {
+        $score = $existing->score;
+        return view('student.test.result', compact('test', 'score'))
+            ->with('total_marks', $test->questions->sum('marks'));
     }
 
+    // Store start time in session if not set
+    $startTimeSessionKey = "test_{$testId}_start_time";
+    if (!session($startTimeSessionKey)) {
+        $startTime = now()->timestamp * 1000; // Milliseconds
+        session([$startTimeSessionKey => $startTime]);
+        Log::info('Test start time set', ['testId' => $testId, 'start_time' => $startTime]);
+    }
+
+    // Get or set randomized question order
+    $questionSessionKey = "test_{$testId}_question_order";
+    $questionOrder = session($questionSessionKey);
+
+    if (!$questionOrder) {
+        $questions = $test->questions->pluck('id')->toArray();
+        shuffle($questions);
+        session([$questionSessionKey => $questions]);
+        $questionOrder = $questions;
+        Log::info('Randomized question order set', ['testId' => $testId, 'questionOrder' => $questionOrder]);
+    }
+
+    // Validate question index
+    if (!is_numeric($questionIndex) || $questionIndex < 0 || $questionIndex >= count($questionOrder)) {
+        Log::info('Redirecting to confirmation page', ['testId' => $testId]);
+        return view('student.test.confirm_submission', compact('test'));
+    }
+
+    // Get the question for the current index
+    $questionId = $questionOrder[$questionIndex];
+    $question = $test->questions->where('id', $questionId)->first();
+
+    // Get or set randomized option order
+    $optionSessionKey = "test_{$testId}_question_{$questionId}_option_order";
+    $optionOrder = session($optionSessionKey);
+
+    if (!$optionOrder) {
+        $optionOrder = array_keys($question->options);
+        shuffle($optionOrder);
+        session([$optionSessionKey => $optionOrder]);
+        Log::info('Randomized option order set', [
+            'testId' => $testId,
+            'questionId' => $questionId,
+            'optionOrder' => $optionOrder
+        ]);
+    }
+
+    // Create shuffled options array
+    $shuffledOptions = [];
+    foreach ($optionOrder as $key) {
+        $shuffledOptions[$key] = $question->options[$key];
+    }
+
+    $question->options = $shuffledOptions;
+
+    return view('student.test.start', compact('test', 'question', 'questionIndex'));
+}
+
+// In storeAnswer
 public function storeAnswer(Request $request, $testId, $questionIndex = 0)
 {
-    \Log::info('storeAnswer started', [
+    Log::info('storeAnswer called', [
         'testId' => $testId,
         'questionIndex' => $questionIndex,
         'request' => $request->all()
@@ -66,23 +111,48 @@ public function storeAnswer(Request $request, $testId, $questionIndex = 0)
         ->where('student_id', auth()->id())
         ->first();
     if ($existing) {
-        \Log::info('Test already submitted', ['testId' => $testId]);
-        return response()->json(['success' => false, 'message' => 'You have already taken this test.']);
+        Log::info('Test already submitted.', ['testId' => $testId]);
+        return response()->json([
+            'success' => false,
+            'message' => 'You have already taken this test.',
+            'nextUrl' => route('student.tests.result', $testId)
+        ]);
     }
 
+    // Validate timer
+    $startTime = session("test_{$testId}_start_time");
+    if ($startTime) {
+        $endTime = $startTime + ($test->duration * 60 * 1000);
+        if (now()->timestamp * 1000 > $endTime) {
+            Log::warning('Answer submission after time expired', ['testId' => $testId]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Test time has expired.',
+                'nextUrl' => route('student.tests.submit', $testId)
+            ]);
+        }
+    } else {
+        Log::warning('No start time found, setting fallback', ['testId' => $testId]);
+        session(["test_{$testId}_start_time" => now()->timestamp * 1000]);
+    }
+
+    // Get question order from session
+    $sessionKey = "test_{$testId}_question_order";
+    $questionOrder = session($sessionKey, []);
+    Log::info('Question order retrieved', ['questionOrder' => $questionOrder]);
+
     // Validate question index
-    if (!is_numeric($questionIndex) || (int)$questionIndex < 0 || (int)$questionIndex >= $test->questions->count()) {
-        \Log::warning('Invalid question index', ['questionIndex' => $questionIndex]);
+    if (!is_numeric($questionIndex) || $questionIndex < 0 || $questionIndex >= count($questionOrder)) {
+        Log::warning('Invalid question index', ['questionIndex' => $questionIndex]);
         if ($questionIndex === 'submit') {
-            \Log::info('Redirecting to submitTest due to submit index', ['testId' => $testId]);
-            // Redirect to submitTest to handle the confirmation form submission
+            Log::info('Redirecting to submitTest', ['testId' => $testId]);
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid submission attempt.',
                 'nextUrl' => route('student.tests.submit', $testId)
             ]);
         }
-        $nextIndex = $test->questions->count(); // Point to confirmation page
+        $nextIndex = count($questionOrder);
         return response()->json([
             'success' => true,
             'message' => 'No more questions.',
@@ -90,41 +160,78 @@ public function storeAnswer(Request $request, $testId, $questionIndex = 0)
         ]);
     }
 
+    // Get the question for the current index
+    $questionId = $questionOrder[$questionIndex];
+    $question = $test->questions->where('id', $questionId)->first();
+    if (!$question) {
+        Log::error('Question not found', ['questionId' => $questionId, 'testId' => $testId]);
+        return response()->json(['success' => false, 'message' => 'Question not found.']);
+    }
+
+    // Get option order from session
+    $optionSessionKey = "test_{$testId}_question_{$questionId}_option_order";
+    $optionOrder = session($optionSessionKey, array_keys($question->options));
+    Log::info('Option order retrieved', ['questionId' => $questionId, 'optionOrder' => $optionOrder]);
+
     // Retrieve or initialize session answers
-    $sessionKey = "test_{$testId}_answers";
-    $answers = session($sessionKey, []);
+    $answerSessionKey = "test_{$testId}_answers";
+    $answers = session($answerSessionKey, []);
 
     // Get submitted answer
-    $submittedAnswer = $request->input("answers.{$test->questions[(int)$questionIndex]->id}");
-    \Log::info('Submitted Answer:', ['submittedAnswer' => $submittedAnswer]);
+    $submittedAnswer = $request->input("answers.{$question->id}");
+    Log::info('Submitted Answer:', [
+        'question_id' => $question->id,
+        'submitted_answer' => $submittedAnswer,
+        'options' => $question->options,
+        'correct_option' => $question->correct_option
+    ]);
 
     if ($submittedAnswer === null) {
-        \Log::warning('No answer selected');
+        Log::warning('No answer selected');
         return response()->json(['success' => false, 'message' => 'Please select an answer before proceeding.']);
     }
 
+    // Validate submitted answer against option order
+    $validKeys = $optionOrder;
+    Log::info('Validating answer', [
+        'question_id' => $question->id,
+        'submitted_answer' => $submittedAnswer,
+        'valid_keys' => $validKeys,
+        'options' => $question->options
+    ]);
+    if (!in_array((string)$submittedAnswer, array_map('strval', $validKeys), true)) {
+        Log::warning('Invalid answer submitted', [
+            'submitted_answer' => $submittedAnswer,
+            'valid_keys' => $validKeys,
+            'question_id' => $question->id
+        ]);
+        return response()->json(['success' => false, 'message' => 'Invalid answer selected.']);
+    }
+
     // Update session answers
-    $answers[$test->questions[(int)$questionIndex]->id] = $submittedAnswer;
-    session([$sessionKey => $answers]);
-    \Log::info('Answers updated in session', ['answers' => $answers]);
+    $answers[$question->id] = $submittedAnswer;
+    session([$answerSessionKey => $answers]);
+    Log::info('Answers updated in session', ['answers' => $answers]);
 
     // Check if there are more questions
     $nextIndex = (int)$questionIndex + 1;
-    if ($nextIndex < $test->questions->count()) {
+    if ($nextIndex < count($questionOrder)) {
         $nextUrl = route('student.tests.start', [$testId, $nextIndex]);
         return response()->json(['success' => true, 'nextUrl' => $nextUrl]);
     }
 
     // Redirect to confirmation page
-    \Log::info('Test ready for submission', ['testId' => $testId]);
+    Log::info('Test ready for submission', ['testId' => $testId]);
     $submitUrl = route('student.tests.start', [$testId, $nextIndex]);
     return response()->json(['success' => true, 'nextUrl' => $submitUrl]);
 }
+
     // Handle final submission of the test
     public function submitTest(Request $request, $testId)
-    {
-        \Log::info('submitTest called', ['testId' => $testId, 'request' => $request->all()]);
+{
+    Log::info('submitTest called', ['testId' => $testId, 'request' => $request->all()]);
 
+    try {
         $test = Tests::with('questions')->findOrFail($testId);
 
         // Check if already submitted
@@ -133,19 +240,47 @@ public function storeAnswer(Request $request, $testId, $questionIndex = 0)
             ->first();
 
         if ($existing) {
-            \Log::info('Test already submitted', ['testId' => $testId, 'studentId' => auth()->id()]);
+            Log::info('Test already submitted', ['testId' => $testId, 'studentId' => auth()->id()]);
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Test already submitted.',
+                    'nextUrl' => route('student.tests.result', $testId)
+                ]);
+            }
             $score = $existing->score;
             return view('student.test.result', compact('test', 'score'))
                 ->with('total_marks', $test->questions->sum('marks'));
         }
 
-        // Retrieve answers from session
-        $answers = session("test_{$testId}_answers", []);
-        \Log::info('Session answers retrieved', ['answers' => $answers]);
+        // Validate timer
+        $startTimeSessionKey = "test_{$testId}_start_time";
+        $startTime = session($startTimeSessionKey);
+        if ($startTime) {
+            $endTime = $startTime + ($test->duration * 60 * 1000);
+            if (now()->timestamp * 1000 > $endTime) {
+                Log::warning('Test submission after time expired', ['testId' => $testId]);
+                // Allow submission but log for audit
+            }
+        } else {
+            Log::warning('No start time found, setting fallback', ['testId' => $testId]);
+            session([$startTimeSessionKey => now()->timestamp * 1000]);
+        }
 
-        // If no answers, show error
+        // Retrieve answers from session
+        $answerSessionKey = "test_{$testId}_answers";
+        $answers = session($answerSessionKey, []);
+        Log::info('Session answers retrieved', ['answers' => $answers]);
+
+        // If no answers, return error
         if (empty($answers)) {
-            \Log::error('No answers found for submission', ['testId' => $testId]);
+            Log::error('No answers found for submission', ['testId' => $testId]);
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No answers found for submission.'
+                ], 400);
+            }
             return redirect()->route('student.tests.index')->with('error', 'No answers found for submission.');
         }
 
@@ -155,7 +290,7 @@ public function storeAnswer(Request $request, $testId, $questionIndex = 0)
             $submittedAnswer = $answers[$question->id] ?? null;
             $correctOption = $question->correct_option;
 
-            \Log::info('Comparing answer', [
+            Log::info('Comparing answer', [
                 'question_id' => $question->id,
                 'submitted_answer' => $submittedAnswer,
                 'submitted_type' => gettype($submittedAnswer),
@@ -167,13 +302,13 @@ public function storeAnswer(Request $request, $testId, $questionIndex = 0)
 
             if ((string)$submittedAnswer === (string)$correctOption) {
                 $score += $question->marks;
-                \Log::info('Correct answer', ['question_id' => $question->id, 'marks_added' => $question->marks]);
+                Log::info('Correct answer', ['question_id' => $question->id, 'marks_added' => $question->marks]);
             } else {
-                \Log::warning('Incorrect answer', ['question_id' => $question->id]);
+                Log::warning('Incorrect answer', ['question_id' => $question->id]);
             }
         }
 
-        \Log::info('Score calculated', ['score' => $score, 'total_marks' => $test->questions->sum('marks')]);
+        Log::info('Score calculated', ['score' => $score, 'total_marks' => $test->questions->sum('marks')]);
 
         // Save result
         Responses::create([
@@ -184,13 +319,42 @@ public function storeAnswer(Request $request, $testId, $questionIndex = 0)
         ]);
 
         // Clear session
-        \Log::info('Clearing session data', ['sessionKey' => "test_{$testId}_answers"]);
-        session()->forget("test_{$testId}_answers");
+        $questionSessionKey = "test_{$testId}_question_order";
+        $answerSessionKey = "test_{$testId}_answers";
+        $startTimeSessionKey = "test_{$testId}_start_time";
+        $sessionKeys = [$questionSessionKey, $answerSessionKey, $startTimeSessionKey];
+        foreach ($test->questions as $question) {
+            $optionSessionKey = "test_{$testId}_question_{$question->id}_option_order";
+            $sessionKeys[] = $optionSessionKey;
+        }
+        Log::info('Clearing session data', ['sessionKeys' => $sessionKeys]);
+        session()->forget($sessionKeys);
 
-        // Show result
+        // Flash testId to clear sessionStorage
+        $request->session()->flash('clearTestStorage', $testId);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Test submitted successfully.',
+                'nextUrl' => route('student.tests.submit', $testId)
+            ]);
+        }
+
         return view('student.test.result', compact('test', 'score'))
             ->with('total_marks', $test->questions->sum('marks'));
+    } catch (\Exception $e) {
+        Log::error('Error in submitTest', ['testId' => $testId, 'error' => $e->getMessage()]);
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Server error during submission.'
+            ], 500);
+        }
+        return redirect()->route('student.tests.index')->with('error', 'An error occurred during submission.');
     }
+}
+
     // Admin: Create Test
     public function adminIndex()
     {
@@ -299,7 +463,6 @@ public function storeAnswer(Request $request, $testId, $questionIndex = 0)
 
         return redirect()->route('admin.tests.questions', $testId)->with('success', 'Question updated successfully');
     }
-
 
     public function viewResponses($testId)
     {

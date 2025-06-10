@@ -35,8 +35,8 @@
                     </div>
 
                     <!-- Action Buttons -->
-                    <a href="" class="btn btn-warning">Retake Test</a>
-                    <a href="" class="btn btn-primary">Go Back to Course Registration</a>
+                    <a href="{{ route('student.tests.index') }}" class="btn btn-warning">Back to Test</a>
+                    <a href="{{ route('dashboard') }}" class="btn btn-primary">Dashboard</a>
                 </div>
             </div>
         </div>
@@ -44,4 +44,10 @@
 </div>
 </div>
 
+@if (session('clearTestStorage'))
+    <script>
+        const testId = {{ session('clearTestStorage') }};
+        sessionStorage.removeItem(`startTime_${testId}`);
+    </script>
+@endif
 @endsection
