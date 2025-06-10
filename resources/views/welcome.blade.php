@@ -10,9 +10,8 @@
                         <div class="row align-items-center">
                             <div class="col-lg-6 mb-4">
                                 <h1  data-aos="fade-up" data-aos-delay="100">Shape Your Future With World-Class Education</h1>
-                                <p class="mb-4"  data-aos="fade-up" data-aos-delay="200">At Educore, we connect students to experienced educators and innovative learning tools. Discover a path to excellence tailored to your ambitions.</p>
+                                <p class="mb-4"  data-aos="fade-up" data-aos-delay="200">At Eduverse, we connect students to experienced educators and innovative learning tools. Discover a path to excellence tailored to your ambitions.</p>
                                 <p data-aos="fade-up" data-aos-delay="300"><a href="#" class="btn btn-primary py-3 px-5 btn-pill">Apply Now</a></p>
-
                             </div>
 
                             <div class="col-lg-5 ml-auto" data-aos="fade-up" data-aos-delay="500">
@@ -45,8 +44,8 @@
         <div class="container">
             <div class="row mb-5 justify-content-center">
                 <div class="col-lg-7 text-center" data-aos="fade-up" data-aos-delay="">
-                    <h2 class="section-title">Why Choose Educore?</h2>
-                    <p>Educore is designed to simplify school management, enhance communication, and promote a seamless educational experience for administrators, teachers, students, and parents.</p>
+                    <h2 class="section-title">Why Choose Eduverse?</h2>
+                    <p>Eduverse is designed to simplify school management, enhance communication, and promote a seamless educational experience for administrators, teachers, students, and parents.</p>
                 </div>
             </div>
 
@@ -120,7 +119,7 @@
                     <img src="asset/images/person_4.jpg" alt="Image" class="img-fluid w-25 mb-4 rounded-circle">
                     <h3 class="mb-4">Jerome Jensen</h3>
                     <blockquote>
-                        <p>&ldquo; Educore has transformed the way we manage our school. From seamless communication to insightful analytics, it’s a complete solution that has simplified our administrative processes and improved the learning experience for students and teachers alike. Highly recommend! &rdquo;</p>
+                        <p>&ldquo; Eduverse has transformed the way we manage our school. From seamless communication to insightful analytics, it’s a complete solution that has simplified our administrative processes and improved the learning experience for students and teachers alike. Highly recommend! &rdquo;</p>
                     </blockquote>
                 </div>
             </div>
@@ -140,8 +139,8 @@
         <div class="container">
             <div class="row mb-5 justify-content-center" data-aos="fade-up" data-aos-delay="">
                 <div class="col-lg-7 text-center">
-                    <h2 class="section-title">Why Choose Educore</h2>
-                    <p>Discover the ultimate solution for managing your school with ease and efficiency. Here’s why Educore is the smart choice for educators, administrators, and students.</p>
+                    <h2 class="section-title">Why Choose Eduverse</h2>
+                    <p>Discover the ultimate solution for managing your school with ease and efficiency. Here’s why Eduverse is the smart choice for educators, administrators, and students.</p>
                 </div>
             </div>
             <div class="row">
