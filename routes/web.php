@@ -6,7 +6,7 @@ use App\Http\Controllers\{
     BursarController, HomeController, CourseRegistrationController, CourseController,
     FacultyController, DepartmentController, ClassScheduleController, StudentScheduleController,
     CourseMaterialController, TestController, StudentManagementController, StaffManagementController,
-    CustomProfileController
+    CustomProfileController, ResultController
 };
 
 // Public Routes
@@ -20,13 +20,9 @@ Route::middleware([
     config('jetstream.auth_session'),
     'verified',
 ])->group(function () {
-
-    // Home/Dashboard
     Route::get('/home', [HomeController::class, 'index'])->name('dashboard');
 
-    // Student Routes
     Route::prefix('student')->name('student.')->group(function () {
-        // Course Registration (unchanged)
         Route::prefix('courses')->name('courses.')->group(function () {
             Route::get('/registration', [CourseRegistrationController::class, 'showRegistrationForm'])->name('registration');
             Route::post('/register', [CourseRegistrationController::class, 'registerForCourses'])->name('register');
@@ -36,26 +32,21 @@ Route::middleware([
             Route::get('/download/pdf', [CourseRegistrationController::class, 'downloadCoursesPDF'])->name('download.pdf');
             Route::get('/download/excel', [CourseRegistrationController::class, 'downloadCoursesExcel'])->name('download.excel');
         });
-
-        // User Profile (unchanged)
         Route::get('/user/profile', [CustomProfileController::class, 'show'])->name('profile.show');
-
-        // Schedule (unchanged)
         Route::get('schedule', [StudentScheduleController::class, 'index'])->name('schedule');
-
-        // Course Materials (unchanged)
         Route::get('/course-materials', [StudentController::class, 'CourseMaterial'])->name('course-materials');
-
-        // Tests
         Route::prefix('tests')->name('tests.')->middleware('prevent.retake')->group(function () {
             Route::get('/', [TestController::class, 'index'])->name('index');
             Route::get('/{testId}/{questionIndex?}', [TestController::class, 'startTest'])->name('start');
             Route::post('/{testId}/submit', [TestController::class, 'submitTest'])->name('submit');
             Route::post('/{testId}/{questionIndex?}', [TestController::class, 'storeAnswer'])->name('storeAnswer');
         });
+        Route::prefix('results')->name('results.')->group(function () {
+            Route::get('/', [ResultController::class, 'index'])->name('index');
+            Route::get('/{userId}/{session}/{semester}', [ResultController::class, 'show'])->name('show');
+        });
     });
 
-    // Admin Routes (unchanged, included for completeness)
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/faculty/import', [FacultyController::class, 'ShowImportForm'])->name('faculties.import.form');
         Route::post('/faculty/import', [FacultyController::class, 'import'])->name('faculties.import');
@@ -98,5 +89,17 @@ Route::middleware([
             '/students' => StudentManagementController::class,
             '/staffs' => StaffManagementController::class,
         ]);
+        Route::prefix('results')->name('results.')->group(function () {
+            Route::get('/', [ResultController::class, 'index'])->name('index');
+            Route::get('/{userId}/{session}/{semester}', [ResultController::class, 'show'])->name('show');
+            Route::middleware('usertype:admin,lecturer')->group(function () {
+                Route::get('/create', [ResultController::class, 'create'])->name('create');
+                Route::post('/', [ResultController::class, 'store'])->name('store'); // Fixed
+                Route::get('/{result}/edit', [ResultController::class, 'edit'])->name('edit');
+                Route::put('/{result}', [ResultController::class, 'update'])->name('update');
+                Route::get('/upload', [ResultController::class, 'upload'])->name('upload');
+                Route::post('/upload', [ResultController::class, 'storeUpload'])->name('storeUpload');
+            });
+        });
     });
 });

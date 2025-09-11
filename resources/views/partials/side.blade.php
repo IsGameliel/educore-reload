@@ -120,11 +120,9 @@
             </a>
             <div class="collapse" id="assessments">
                 <ul class="nav flex-column sub-menu">
+                    
                     <li class="nav-item">
-                        <a class="nav-link" href="#"> Create Exam Schedules </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#"> Manage Grades & Results </a>
+                        <a class="nav-link" href="{{ route('admin.results.index') }}"> Manage Grades & Results </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#"> Publish Results </a>

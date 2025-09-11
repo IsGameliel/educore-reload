@@ -24,7 +24,8 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
             'department_id' => ['nullable', 'exists:departments,id'], // Add validation for the department
             'level' => ['nullable', 'string'],
             'photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'], // Validate the photo
-        ])->validateWithBag('updateProfileInformation');
+            'matric_number' => ['nullable', 'string'],
+            ])->validateWithBag('updateProfileInformation');
 
         if ($input['email'] !== $user->email &&
             $user instanceof MustVerifyEmail) {
@@ -35,6 +36,7 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
                 'email' => $input['email'],
                 'department_id' => $input['department_id'] ?? $user->department_id, // Save department
                 'level' => $input['level'],
+                'matric_number' =>$input['matric_number'],
             ])->save();
         }
         // Handle profile photo update

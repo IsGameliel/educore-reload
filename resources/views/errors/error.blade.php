@@ -1,19 +1,10 @@
-@extends('layouts.app')
+@extends('layouts.err')
 
 @section('content')
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header text-danger">
-                        <h1>Error {{ $statusCode }}</h1>
-                    </div>
-                    <div class="card-body">
-                        <p>{{ $exception->getMessage() ?: 'An unexpected error occurred.' }}</p>
-                        <a href="{{ url()->previous() }}" class="btn btn-primary">Go Back</a>
-                    </div>
-                </div>
-            </div>
+        <div class="content">
+            <h2>Error {{ $statusCode }}</h2>
+            <p>{{ $exception->getMessage() ?: 'An unexpected error occurred.' }}</p>
+            <a href="{{ url('/') }}" class="btn btn-primary">Go Home</a>
         </div>
-    </div>
 @endsection
+

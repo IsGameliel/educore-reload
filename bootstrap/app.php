@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'prevent.retake' => \App\Http\Middleware\PreventTestRetake::class,
+            'usertype' => \App\Http\Middleware\UsertypeMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

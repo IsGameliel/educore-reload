@@ -107,6 +107,12 @@
                 </x-select>
                 <x-input-error for="state.level" class="mt-2" />
             </div>
+            <div class="col-span-6 sm:col-span-4">
+                <x-label for="level" value="{{ __('Matric Number') }}" />
+                <x-input id="matric_number" type="text" class="mt-1 block w-full" wire:model="state.matric_number" required autocomplete="matric_number" />
+                <x-input-error for="state.matric_number" class="mt-2" />
+            </div>
+
         @endif
     </x-slot>
 
