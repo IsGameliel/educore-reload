@@ -59,7 +59,7 @@
                         <a class="nav-link" href="#"> Exam Schedule </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#"> View Results </a>
+                        <a class="nav-link" href="{{ route('student.results.index') }}"> View Results </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#"> Download Result </a>

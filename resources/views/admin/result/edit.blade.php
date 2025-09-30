@@ -24,7 +24,7 @@
                 <div class="card-body">
     <div class="container">
         <h2>Edit Result</h2>
-        @if ($session('success'))
+        @if (session('success'))
             <div class="alert alert-success" role="alert">{{ session('success') }}</div>
         @endif
         <form action="{{ route('admin.results.update', $result) }}" method="POST">
@@ -48,7 +48,7 @@
             <div class="form-group">
                 <label for="semester">Semester</label>
                 <select name="semester" class="form-control" required>
-                    <select name="option value" value="First" {{ $result->semester == 'First' ? 'selected' : '' }}>First</option>
+                    <option name="option value" value="First" {{ $result->semester == 'First' ? 'selected' : '' }}>First</option>
                     <option value="Second" {{ $result->semester == 'Second' ? 'selected' : '' }}>Second</option>
                 </select>
             </div>

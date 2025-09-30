@@ -14,8 +14,6 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class ResultController extends Controller
 {
-    // Removed constructor with middleware calls
-
     public function index(Request $request)
     {
         $query = Result::with('user');
@@ -37,12 +35,15 @@ class ResultController extends Controller
         $results = $query->get();
         $students = User::where('usertype', 'student')->get();
         $view = Auth::user()->usertype === 'student' ? 'student.result.index' : 'admin.result.index';
+
         return view($view, compact('results', 'students'));
     }
 
     public function show($userId, $session, $semester)
     {
         $user = User::findOrFail($userId);
+        $session = urldecode($session);
+
         if (Auth::user()->usertype === 'student' && Auth::id() !== $user->id) {
             abort(403, 'Unauthorized');
         }
@@ -56,19 +57,17 @@ class ResultController extends Controller
         }
 
         $totalCreditUnits = $results->sum('credit_unit');
-        $weightedSum = $results->sum(function ($result) {
-            return $result->credit_unit * $result->grade_point;
-        });
+        $weightedSum = $results->sum(fn($result) => $result->credit_unit * $result->grade_point);
         $gpa = $totalCreditUnits > 0 ? round($weightedSum / $totalCreditUnits, 2) : 0;
 
         $allResults = Result::where('user_id', $userId)->get();
         $totalAllCreditUnits = $allResults->sum('credit_unit');
-        $totalWeightedSum = $allResults->sum(function ($result) {
-            return $result->credit_unit * $result->grade_point;
-        });
+        $totalWeightedSum = $allResults->sum(fn($result) => $result->credit_unit * $result->grade_point);
         $cgpa = $totalAllCreditUnits > 0 ? round($totalWeightedSum / $totalAllCreditUnits, 2) : null;
 
-        return view('student.result.show', compact('user', 'results', 'totalCreditUnits', 'gpa', 'cgpa', 'session', 'semester'));
+        return view('student.result.show', compact(
+            'user', 'results', 'totalCreditUnits', 'gpa', 'cgpa', 'session', 'semester'
+        ));
     }
 
     public function create()
@@ -77,6 +76,16 @@ class ResultController extends Controller
         $departments = Department::all();
         return view('admin.result.create', compact('students', 'departments'));
     }
+
+    public function getStudentsByDepartment($department_id)
+    {
+        $students = User::where('usertype', 'student')
+            ->where('department_id', $department_id)
+            ->get(['id', 'name', 'matric_number', 'level']);
+
+        return response()->json($students);
+    }
+
 
     public function store(Request $request)
     {
@@ -93,7 +102,8 @@ class ResultController extends Controller
 
         $user = User::where('usertype', 'student')->findOrFail($request->user_id);
         $gradeData = Result::calculateGradeAndPoint($request->score);
-        $result = Result::create([
+
+        Result::create([
             'user_id' => $request->user_id,
             'matric_number' => $user->matric_number,
             'session' => $request->session,
@@ -107,8 +117,6 @@ class ResultController extends Controller
             'grade_point' => $gradeData['grade_point'],
             'department_id' => $request->department_id,
         ]);
-
-        $this->generateTranscript($result);
 
         return redirect()->route('admin.results.index')->with('success', 'Result added successfully.');
     }
@@ -134,6 +142,7 @@ class ResultController extends Controller
 
         $user = User::where('usertype', 'student')->findOrFail($request->user_id);
         $gradeData = Result::calculateGradeAndPoint($request->score);
+
         $result->update([
             'user_id' => $request->user_id,
             'matric_number' => $user->matric_number,
@@ -148,8 +157,6 @@ class ResultController extends Controller
             'grade_point' => $gradeData['grade_point'],
             'department_id' => $request->department_id,
         ]);
-
-        $this->generateTranscript($result);
 
         return redirect()->route('admin.results.index')->with('success', 'Result updated successfully.');
     }
@@ -167,57 +174,133 @@ class ResultController extends Controller
             'file' => 'required|file|mimes:csv,xlsx|max:2048',
         ]);
 
-        $user = User::where('usertype', 'student')->findOrFail($request->user_id);
         Excel::import(new ResultsImport($request->user_id), $request->file('file'));
 
-        $results = Result::where('user_id', $request->user_id)
-                        ->where('session', $request->input('session', ''))
-                        ->where('semester', $request->input('semester', ''))
+        return redirect()->route('admin.results.index')
+                         ->with('success', 'Results uploaded successfully. You can now generate the transcript.');
+    }
+
+    public function generateTranscriptForSemester($userId, $session, $semester)
+    {
+        $user = User::findOrFail($userId);
+        $session = urldecode($session);
+
+        // fetch all results for that user/session/semester
+        $results = Result::where('user_id', $userId)
+                        ->where('session', $session)
+                        ->where('semester', $semester)
                         ->get();
 
-        if ($results->isNotEmpty()) {
-            $this->generateTranscript($results->first());
+        if ($results->isEmpty()) {
+            return back()->with('error', 'No results found for this session and semester.');
         }
 
-        return redirect()->route('admin.results.index')->with('success', 'Results uploaded and transcript generated.');
+        $this->generateTranscript($user, $results, $session, $semester);
+
+        return back()->with('success', 'Transcript generated successfully.');
     }
 
-    protected function generateTranscript(Result $result)
+    protected function generateTranscript(User $user, $results, $session, $semester)
     {
-        $user = User::findOrFail($result->user_id);
-        $results = Result::bySessionAndSemester($result->session, $result->semester)
-                        ->where('user_id', $result->user_id)
-                        ->get();
         $department = Department::find($user->department_id);
+
+        // GPA for this semester
         $totalCreditUnits = $results->sum('credit_unit');
-        $weightedSum = $results->sum(function ($res) {
-            return $res->credit_unit * $res->grade_point;
-        });
+        $weightedSum = $results->sum(fn($res) => $res->credit_unit * $res->grade_point);
         $gpa = $totalCreditUnits > 0 ? round($weightedSum / $totalCreditUnits, 2) : 0;
 
-        $allResults = Result::where('user_id', $result->user_id)->get();
+        // CGPA across all results
+        $allResults = Result::where('user_id', $user->id)->get();
         $totalAllCreditUnits = $allResults->sum('credit_unit');
-        $totalWeightedSum = $allResults->sum(function ($res) {
-            return $res->credit_unit * $res->grade_point;
-        });
+        $totalWeightedSum = $allResults->sum(fn($res) => $res->credit_unit * $res->grade_point);
         $cgpa = $totalAllCreditUnits > 0 ? round($totalWeightedSum / $totalAllCreditUnits, 2) : null;
 
+        // sanitize session & semester for filename
+        $sanitizedSession = str_replace(['/', ' ', '\\'], '_', $session);
+        $sanitizedSemester = str_replace(['/', ' ', '\\'], '_', $semester);
+
+        // build PDF
         $pdf = Pdf::loadView('documents.transcript', [
-            'student' => $user,
-            'results' => $results,
+            'student'    => $user,
+            'results'    => $results,
             'totalCreditUnits' => $totalCreditUnits,
-            'gpa' => $gpa,
-            'cgpa' => $cgpa,
+            'gpa'        => $gpa,
+            'cgpa'       => $cgpa,
             'department' => $department,
+            'session'    => $session,
+            'semester'   => $semester,
         ]);
 
-        $transcriptName = "transcript_{$result->user_id}_{$result->session}_{$result->semester}_" . time() . '.pdf';
-        $transcriptPath = 'documents/' . $transcriptName;
-        Storage::disk('public')->put($transcriptPath, $pdf->output());
+        $transcriptName = "transcript_{$user->id}_{$sanitizedSession}_{$sanitizedSemester}_" . time() . '.pdf';
+        $relativePath   = 'documents/transcripts/' . $transcriptName;
 
-        Result::where('user_id', $result->user_id)
-              ->where('session', $result->session)
-              ->where('semester', $result->semester)
-              ->update(['transcript_path' => $transcriptPath]);
+        // save file
+        Storage::disk('public')->put($relativePath, $pdf->output());
+
+        // ✅ store the public URL in DB
+        $transcriptUrl = Storage::url($relativePath);
+
+        Result::where('user_id', $user->id)
+            ->where('session', $session)
+            ->where('semester', $semester)
+            ->update(['transcript_path' => $transcriptUrl]);
+
+        return $transcriptUrl;
     }
+
+
+    protected function generateFullTranscript(User $user)
+    {
+        // Load all results grouped by session and semester
+        $allResults = Result::where('user_id', $user->id)
+                            ->orderBy('session')
+                            ->orderByRaw("FIELD(semester, 'First', 'Second')")
+                            ->get()
+                            ->groupBy(fn($result) => $result->session . '_' . $result->semester);
+
+        $department = $user->department;
+
+        // Build array with GPA per semester
+        $transcriptData = [];
+        foreach ($allResults as $key => $results) {
+            $results = collect($results);
+            $totalCreditUnits = $results->sum('credit_unit');
+            $weightedSum = $results->sum(fn($res) => $res->credit_unit * $res->grade_point);
+            $gpa = $totalCreditUnits > 0 ? round($weightedSum / $totalCreditUnits, 2) : 0;
+
+            $transcriptData[$key] = [
+                'results' => $results,
+                'totalCreditUnits' => $totalCreditUnits,
+                'gpa' => $gpa,
+            ];
+        }
+
+        // CGPA across all results
+        $totalAllCreditUnits = $allResults->flatten()->sum('credit_unit');
+        $totalWeightedSum = $allResults->flatten()->sum(fn($res) => $res->credit_unit * $res->grade_point);
+        $cgpa = $totalAllCreditUnits > 0 ? round($totalWeightedSum / $totalAllCreditUnits, 2) : null;
+
+        // build PDF
+        $pdf = Pdf::loadView('documents.full_transcript', [
+            'student'       => $user,
+            'transcriptData'=> $transcriptData,
+            'cgpa'          => $cgpa,
+            'department'    => $department,
+        ]);
+
+        // ✅ save to storage
+        $transcriptName = "full_transcript_{$user->id}_" . time() . '.pdf';
+        $relativePath   = 'documents/transcripts/' . $transcriptName;
+        Storage::disk('public')->put($relativePath, $pdf->output());
+
+        // ✅ store the public URL
+        $transcriptUrl = Storage::url($relativePath);
+
+        Result::where('user_id', $user->id)
+            ->update(['transcript_path' => $transcriptUrl]);
+
+        return $transcriptUrl;
+    }
+
+
 }

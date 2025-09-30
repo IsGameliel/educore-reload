@@ -78,7 +78,7 @@ class User extends Authenticatable
 
     public function department()
     {
-        return $this->belongsTo(Department::class); // Foreign key 'department_id' in users table
+        return $this->belongsTo(Department::class, 'department_id'); // Foreign key 'department_id' in users table
     }
 
     public function classSchedules()

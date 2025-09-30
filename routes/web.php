@@ -22,6 +22,9 @@ Route::middleware([
 ])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('dashboard');
 
+    // -------------------------
+    // STUDENT ROUTES
+    // -------------------------
     Route::prefix('student')->name('student.')->group(function () {
         Route::prefix('courses')->name('courses.')->group(function () {
             Route::get('/registration', [CourseRegistrationController::class, 'showRegistrationForm'])->name('registration');
@@ -32,21 +35,34 @@ Route::middleware([
             Route::get('/download/pdf', [CourseRegistrationController::class, 'downloadCoursesPDF'])->name('download.pdf');
             Route::get('/download/excel', [CourseRegistrationController::class, 'downloadCoursesExcel'])->name('download.excel');
         });
+
         Route::get('/user/profile', [CustomProfileController::class, 'show'])->name('profile.show');
         Route::get('schedule', [StudentScheduleController::class, 'index'])->name('schedule');
         Route::get('/course-materials', [StudentController::class, 'CourseMaterial'])->name('course-materials');
+
         Route::prefix('tests')->name('tests.')->middleware('prevent.retake')->group(function () {
             Route::get('/', [TestController::class, 'index'])->name('index');
             Route::get('/{testId}/{questionIndex?}', [TestController::class, 'startTest'])->name('start');
             Route::post('/{testId}/submit', [TestController::class, 'submitTest'])->name('submit');
             Route::post('/{testId}/{questionIndex?}', [TestController::class, 'storeAnswer'])->name('storeAnswer');
         });
+
         Route::prefix('results')->name('results.')->group(function () {
             Route::get('/', [ResultController::class, 'index'])->name('index');
-            Route::get('/{userId}/{session}/{semester}', [ResultController::class, 'show'])->name('show');
+            Route::get('/{userId}/{session}/{semester}', [ResultController::class, 'show'])
+                ->where('session', '.*')
+                ->name('show');
+
+            // ✅ Student transcript route
+            Route::get('/{userId}/{session}/{semester}/transcript', [ResultController::class, 'generateTranscriptForSemester'])
+                ->where('session', '.*')
+                ->name('transcript');
         });
     });
 
+    // -------------------------
+    // ADMIN ROUTES
+    // -------------------------
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/faculty/import', [FacultyController::class, 'ShowImportForm'])->name('faculties.import.form');
         Route::post('/faculty/import', [FacultyController::class, 'import'])->name('faculties.import');
@@ -62,6 +78,7 @@ Route::middleware([
             'departments' => DepartmentController::class,
             'class-schedules' => ClassScheduleController::class,
         ]);
+
         Route::prefix('course-materials')->name('course-materials.')->group(function () {
             Route::get('/', [CourseMaterialController::class, 'index'])->name('index');
             Route::get('/create', [CourseMaterialController::class, 'create'])->name('create');
@@ -72,6 +89,7 @@ Route::middleware([
             Route::get('/{id}/edit', [CourseMaterialController::class, 'edit'])->name('edit');
             Route::put('/{id}', [CourseMaterialController::class, 'update'])->name('update');
         });
+
         Route::prefix('tests')->name('tests.')->group(function () {
             Route::get('/', [TestController::class, 'adminIndex'])->name('index');
             Route::get('/create', [TestController::class, 'create'])->name('create');
@@ -85,20 +103,34 @@ Route::middleware([
             Route::get('/{testId}/responses', [TestController::class, 'viewResponses'])->name('responses');
             Route::delete('/{testId}/questions/{questionId}', [TestController::class, 'deleteQuestion'])->name('questions.delete');
         });
+
         Route::resources([
             '/students' => StudentManagementController::class,
             '/staffs' => StaffManagementController::class,
         ]);
+
         Route::prefix('results')->name('results.')->group(function () {
             Route::get('/', [ResultController::class, 'index'])->name('index');
             Route::get('/{userId}/{session}/{semester}', [ResultController::class, 'show'])->name('show');
+
             Route::middleware('usertype:admin,lecturer')->group(function () {
                 Route::get('/create', [ResultController::class, 'create'])->name('create');
-                Route::post('/', [ResultController::class, 'store'])->name('store'); // Fixed
+                Route::get('/get-students/{department_id}', [App\Http\Controllers\ResultController::class, 'getStudentsByDepartment']);
+                Route::post('/', [ResultController::class, 'store'])->name('store');
                 Route::get('/{result}/edit', [ResultController::class, 'edit'])->name('edit');
                 Route::put('/{result}', [ResultController::class, 'update'])->name('update');
                 Route::get('/upload', [ResultController::class, 'upload'])->name('upload');
                 Route::post('/upload', [ResultController::class, 'storeUpload'])->name('storeUpload');
+
+                // ✅ Single student transcript
+                Route::post('/{userId}/{session}/{semester}/transcript', [ResultController::class, 'generateTranscriptForSemester'])
+                    ->where('session', '.*')
+                    ->name('transcript.generate');
+
+                // ✅ Bulk transcripts
+                Route::post('/{session}/{semester}/transcripts', [ResultController::class, 'generateTranscriptsForAll'])
+                    ->where('session', '.*')
+                    ->name('transcripts.bulk');
             });
         });
     });
