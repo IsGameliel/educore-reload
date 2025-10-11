@@ -125,7 +125,7 @@
                         <a class="nav-link" href="{{ route('admin.results.index') }}"> Manage Grades & Results </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#"> Publish Results </a>
+                        <a class="nav-link" href="{{ route('admin.results.create') }}"> Publish Results </a>
                     </li>
                 </ul>
             </div>

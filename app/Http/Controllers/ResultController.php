@@ -16,14 +16,49 @@ class ResultController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Result::with('user');
+        $query = Result::with(['user.department']);
 
         if (Auth::user()->usertype === 'student') {
             $query->where('user_id', Auth::id());
         }
 
-        if ($request->has('user_id') && $request->user_id && Auth::user()->usertype !== 'student') {
+        if ($request->filled('user_id') && Auth::user()->usertype !== 'student') {
             $query->where('user_id', $request->user_id);
+        }
+        if ($request->filled('department_id')) {
+            $query->whereHas('user', function($q) use ($request) {
+                $q->where('department_id', $request->department_id);
+            });
+        }
+        if ($request->filled('session')) {
+            $query->where('session', $request->session);
+        }
+        if ($request->filled('semester')) {
+            $query->where('semester', $request->semester);
+        }
+        if ($request->filled('level')) {
+            $query->where('level', $request->level);
+        }
+
+        $results = $query->get();
+        $students = User::where('usertype', 'student')->get();
+        $departments = Department::all();
+        $view = Auth::user()->usertype === 'student' ? 'student.result.index' : 'admin.result.index';
+
+        return view($view, compact('results', 'students', 'departments'));
+    }
+
+    public function export(Request $request)
+    {
+        $query = Result::with('user');
+
+        if ($request->has('user_id') && $request->user_id) {
+            $query->where('user_id', $request->user_id);
+        }
+        if ($request->has('department_id') && $request->department_id) {
+            $query->whereHas('user', function($q) use ($request) {
+                $q->where('department_id', $request->department_id);
+            });
         }
         if ($request->has('session') && $request->session) {
             $query->bySessionAndSemester($request->session, $request->semester ?? '');
@@ -33,10 +68,24 @@ class ResultController extends Controller
         }
 
         $results = $query->get();
-        $students = User::where('usertype', 'student')->get();
-        $view = Auth::user()->usertype === 'student' ? 'student.result.index' : 'admin.result.index';
 
-        return view($view, compact('results', 'students'));
+        // Prepare data for export
+        $exportData = $results->map(function($result) {
+            return [
+                'Student Name'   => $result->user->name,
+                'Matric Number'  => $result->matric_number,
+                'Department'     => $result->user->department->name ?? '',
+                'Session'        => $result->session,
+                'Semester'       => $result->semester,
+                'Level'          => $result->level,
+                'Course Code'    => $result->course_code,
+                'Course Title'   => $result->course_title,
+                'Score'          => $result->score,
+                'Grade'          => $result->grade,
+            ];
+        });
+
+        return Excel::download(new \App\Exports\ArrayExport($exportData->toArray()), 'filtered_results.xlsx');
     }
 
     public function show($userId, $session, $semester)
@@ -75,6 +124,19 @@ class ResultController extends Controller
         $students = User::where('usertype', 'student')->get();
         $departments = Department::all();
         return view('admin.result.create', compact('students', 'departments'));
+    }
+
+    public function editGroup($user_id, $session, $semester)
+    {
+        $results = Result::where('user_id', $user_id)
+            ->where('session', $session)
+            ->where('semester', $semester)
+            ->get();
+
+        $students = User::where('usertype', 'student')->get();
+        $departments = Department::all();
+
+        return view('admin.result.edit-group', compact('results', 'students', 'departments', 'user_id', 'session', 'semester'));
     }
 
     public function getStudentsByDepartment($department_id)

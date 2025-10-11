@@ -30,37 +30,79 @@
                     @if (session('error'))
                         <div class="alert alert-danger">{{ session('error') }}</div>
                     @endif
-
-                    <!-- Filters -->
-                    <form method="GET" action="{{ route('admin.results.index') }}" class="mb-3">
-                        <div class="row">
-                            <div class="col-md-3">
-                                <select name="user_id" class="form-control">
-                                    <option value="">All Students</option>
-                                    @foreach ($students as $student)
-                                        <option value="{{ $student->id }}" {{ request('user_id') == $student->id ? 'selected' : '' }}>
-                                            {{ $student->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <input type="text" name="session" class="form-control" placeholder="Session (e.g., 2023/2024)" value="{{ request('session') }}">
-                            </div>
-                            <div class="col-md-3">
-                                <select name="semester" class="form-control">
-                                    <option value="">All Semesters</option>
-                                    <option value="First" {{ request('semester') == 'First' ? 'selected' : '' }}>First</option>
-                                    <option value="Second" {{ request('semester') == 'Second' ? 'selected' : '' }}>Second</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <input type="text" name="level" class="form-control" placeholder="Level (e.g., 200)" value="{{ request('level') }}">
-                            </div>
+                    
+                    
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <form method="GET" action="{{ route('admin.results.index') }}">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-2">
+                                        <label for="department_id" class="form-label fw-bold">Department</label>
+                                        <select name="department_id" id="department_id" class="form-select">
+                                            <option value="">All Departments</option>
+                                            @foreach ($departments as $department)
+                                                <option value="{{ $department->id }}" {{ request('department_id') == $department->id ? 'selected' : '' }}>
+                                                    {{ $department->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="user_id" class="form-label fw-bold">Student</label>
+                                        <select name="user_id" id="user_id" class="form-select">
+                                            <option value="">All Students</option>
+                                            @foreach ($students as $student)
+                                                <option value="{{ $student->id }}" {{ request('user_id') == $student->id ? 'selected' : '' }}>
+                                                    {{ $student->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="session" class="form-label fw-bold">Session</label>
+                                        <input type="text" name="session" id="session" class="form-control" placeholder="e.g., 2023/2024" value="{{ request('session') }}">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="semester" class="form-label fw-bold">Semester</label>
+                                        <select name="semester" id="semester" class="form-select">
+                                            <option value="">All Semesters</option>
+                                            <option value="First" {{ request('semester') == 'First' ? 'selected' : '' }}>First</option>
+                                            <option value="Second" {{ request('semester') == 'Second' ? 'selected' : '' }}>Second</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="level" class="form-label fw-bold">Level</label>
+                                        <input type="text" name="level" id="level" class="form-control" placeholder="e.g., 200" value="{{ request('level') }}">
+                                    </div>
+                                    <div class="col-md-2 d-grid">
+                                        <button type="submit" class="btn btn-primary">Filter</button>
+                                    </div>
+                                </div>
+                            </form>
+                            <form method="GET" action="{{ route('admin.results.export') }}" class="mt-3">
+                                <div class="row">
+                                    <div class="col-md-2 offset-md-10 d-grid">
+                                        <input type="hidden" name="department_id" value="{{ request('department_id') }}">
+                                        <input type="hidden" name="user_id" value="{{ request('user_id') }}">
+                                        <input type="hidden" name="session" value="{{ request('session') }}">
+                                        <input type="hidden" name="semester" value="{{ request('semester') }}">
+                                        <input type="hidden" name="level" value="{{ request('level') }}">
+                                        <button type="submit" class="btn btn-success">Export to Excel</button>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
-                        <button type="submit" class="btn btn-primary mt-2">Filter</button>
-                    </form>
+                    </div>
 
+                    <!-- Export to Excel Button (separate form) -->
+                    <form method="GET" action="{{ route('admin.results.export') }}" class="mb-3">
+                        <input type="hidden" name="department_id" value="{{ request('department_id') }}">
+                        <input type="hidden" name="user_id" value="{{ request('user_id') }}">
+                        <input type="hidden" name="session" value="{{ request('session') }}">
+                        <input type="hidden" name="semester" value="{{ request('semester') }}">
+                        <input type="hidden" name="level" value="{{ request('level') }}">
+                        <button type="submit" class="btn btn-success">Export to Excel</button>
+                    </form>
                     <!-- Actions -->
                     <div class="mb-3">
                         <a href="{{ route('admin.results.create') }}" class="btn btn-primary">Add Result</a>
@@ -130,7 +172,7 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <a href="{{ route('admin.results.edit', [$first->user_id, $first->session, $first->semester]) }}" class="btn btn-sm btn-warning">Edit All</a>
+                                            <a href="{{ route('admin.results.editGroup', [$first->user_id, $first->session, $first->semester]) }}" class="btn btn-sm btn-warning">Edit All</a>
                                         </td>
                                     </tr>
                                 @endforeach

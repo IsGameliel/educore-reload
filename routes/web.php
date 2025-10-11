@@ -112,6 +112,10 @@ Route::middleware([
         Route::prefix('results')->name('results.')->group(function () {
             Route::get('/', [ResultController::class, 'index'])->name('index');
             Route::get('/{userId}/{session}/{semester}', [ResultController::class, 'show'])->name('show');
+            Route::get('/export', [ResultController::class, 'export'])->name('export');
+
+            Route::get('/edit-group/{user_id}/{session}/{semester}', [ResultController::class, 'editGroup'])->name('editGroup');
+            Route::put('/update-group/{user_id}/{session}/{semester}', [ResultController::class, 'updateGroup'])->name('updateGroup');
 
             Route::middleware('usertype:admin,lecturer')->group(function () {
                 Route::get('/create', [ResultController::class, 'create'])->name('create');
