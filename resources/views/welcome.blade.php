@@ -11,7 +11,7 @@
                             <div class="col-lg-6 mb-4">
                                 <h1  data-aos="fade-up" data-aos-delay="100">Shape Your Future With World-Class Education</h1>
                                 <p class="mb-4"  data-aos="fade-up" data-aos-delay="200">At Eduverse, we connect students to experienced educators and innovative learning tools. Discover a path to excellence tailored to your ambitions.</p>
-                                <p data-aos="fade-up" data-aos-delay="300"><a href="#" class="btn btn-primary py-3 px-5 btn-pill">Apply Now</a></p>
+                                <p data-aos="fade-up" data-aos-delay="300"><a href="{{ url('login') }}" class="btn btn-primary py-3 px-5 btn-pill">Join us</a></p>
                             </div>
 
                             <div class="col-lg-5 ml-auto" data-aos="fade-up" data-aos-delay="500">

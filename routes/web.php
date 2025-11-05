@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Models\Department;
 use App\Http\Controllers\{
     AdminController, StudentController, LecturerController, VcController, RegistrarController,
     BursarController, HomeController, CourseRegistrationController, CourseController,
@@ -13,6 +14,12 @@ use App\Http\Controllers\{
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/register', function () {
+    $departments = Department::orderBy('name')->get(['id', 'name']);
+    return view('auth.register', compact('departments'));
+})->middleware(['guest'])->name('register');
+
 
 // Authenticated Routes
 Route::middleware([

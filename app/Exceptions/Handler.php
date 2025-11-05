@@ -7,6 +7,7 @@ use Throwable;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\Mailer\Exception\TransportException;
 
 class Handler extends ExceptionHandler
 {
@@ -24,8 +25,47 @@ class Handler extends ExceptionHandler
     /**
      * Register the exception handling callbacks for the application.
      */
+
+    public function render($request, Throwable $e)
+    {
+        // Catch mail errors not handled by renderable()
+        if ($e instanceof \Symfony\Component\Mailer\Exception\TransportException) {
+            \Log::error('Global mail transport error: '.$e->getMessage());
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'error' => 'Email sending failed. Please try again later.',
+                ], 500);
+            }
+
+            return response()->view('errors.mail', [
+                'message' => 'We couldn’t send your email. Please try again later.',
+            ], 500);
+        }
+
+        // Fallback to parent or your web/api handlers
+        return parent::render($request, $e);
+    }
+
     public function register(): void
     {
+        $this->renderable(function (TransportException $e, $request) {
+            \Log::error('Mail transport failed: '.$e->getMessage());
+
+            // Handle JSON requests (API)
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'error' => 'Email sending failed. Please try again later.',
+                ], 500);
+            }
+
+            // Handle Web requests
+            return response()->view('errors.mail', [
+                'message' => 'We couldn’t send your email. Please try again later.',
+            ], 500);
+        });
+
+
         $this->renderable(function (Throwable $e, Request $request) {
             // Handle API requests
             if ($request->expectsJson()) {
@@ -90,4 +130,5 @@ class Handler extends ExceptionHandler
 
         return parent::prepareResponse($request, $e);
     }
+
 }
