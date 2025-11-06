@@ -5,21 +5,39 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\CourseImport;
+use DataTables; // yajra
+use App\Exports\CoursesExport;
 use App\Models\{
     Department, Courses
 };
+
 
 class CourseController extends Controller
 {
     /**
      * Display a listing of the courses.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Fetch all courses with their associated departments
-        $courses = Courses::with('department')->paginate(30); // Paginated for better UI
-        return view('admin.courses.index', compact('courses'));
+        $departments = Department::orderBy('name')->get(['id','name']);
+
+        $query = Courses::query(); // Use query builder
+
+        if ($request->filled('title')) {
+            $query->where('title', 'like', "%{$request->title}%");
+        }
+
+        if ($request->filled('department')) {
+            $query->where('department_id', $request->department);
+        }
+
+        $courses = $query->paginate(15)->withQueryString();
+
+        return view('admin.courses.index', compact('courses', 'departments'));
     }
+
+
+
 
     /**
      * Show the form for creating a new course.

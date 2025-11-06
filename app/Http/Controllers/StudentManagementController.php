@@ -7,6 +7,9 @@ use App\Models\User;
 use App\Models\Department;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use App\Exports\StudentsExport;
+use Maatwebsite\Excel\Facades\Excel;
+
 
 
 class StudentManagementController extends Controller
@@ -14,10 +17,36 @@ class StudentManagementController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $students = User::where('usertype', 'student')->paginate(10);
-        return view('admin.students.index', compact('students'));
+
+        $query = User::where('usertype', 'student');
+
+        if ($request->filled('name')) {
+            $query->where('name', 'like', "%{$request->name}%");
+        }
+
+        if ($request->filled('department')) {
+            $query->whereHas('department', function ($q) use ($request) {
+                $q->where('name', $request->department);
+            });
+        }
+
+        if ($request->filled('level')) {
+            $query->where('level', $request->level);
+        }
+
+        if ($request->filled('export') && $request->export === 'excel') {
+            $collection = $query->get(); // get filtered collection
+            return Excel::download(new StudentsExport($collection), 'students.xlsx');
+        }
+
+        $students = $query->paginate(15)->withQueryString();
+
+        $departments = Department::orderBy('name')->get(['id', 'name']);
+
+        return view('admin.students.index', compact('students', 'departments'));
     }
 
     /**
