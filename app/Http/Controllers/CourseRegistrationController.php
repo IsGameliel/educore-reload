@@ -18,9 +18,9 @@ class CourseRegistrationController extends Controller
     // Maximum allowed credit units per semester
     private $creditUnitLimits = [
         '100' => 24, // Max 24 credit units for 100-level
-        '200' => 30, // Max 30 credit units for 200-level
-        '300' => 30, // Max 30 credit units for 300-level
-        '400' => 30, // Max 30 credit units for 400-level
+        '200' => 24, // Max 30 credit units for 200-level
+        '300' => 24, // Max 30 credit units for 300-level
+        '400' => 24, // Max 30 credit units for 400-level
     ];
 
     /**
@@ -35,6 +35,24 @@ class CourseRegistrationController extends Controller
 
         return view('student.coursereg.create', compact('courses', 'departments'));
     }
+
+    public function getCoursesByLevel(Request $request)
+    {
+        $user = Auth::user();
+        $departmentId = $user->department_id;
+        $level = $request->level;
+        $semester = $request->semester;
+
+        $courses = Courses::where('department_id', $departmentId)
+            ->where('level', $level)
+            ->where('semester', $semester)
+            ->with('prerequisites')
+            ->get();
+
+        return response()->json($courses);
+    }
+
+
 
     /**
      * Get the credit unit limit based on student's level.
@@ -51,7 +69,7 @@ class CourseRegistrationController extends Controller
     {
         $user = Auth::user(); // Get the authenticated student
         $userId = $user->id;
-        $semester = $this->getSemesterName($request->input('semester')); // Semester name: First or Second
+        $semester = $request->input('semester');
         $level = $request->input('level');
         $courseIds = $request->input('course_ids');
 
@@ -120,34 +138,32 @@ class CourseRegistrationController extends Controller
     /**
      * Show the list of courses the student is registered for in a specific semester.
      */
-    public function getRegisteredCourses(Request $request)
-    {
-        $userId = Auth::user()->id;
-        $semester = $this->getSemesterName($request->input('semester')); // Get semester name: First or Second
 
-        // Fetch the courses registered by the student in the specified semester
+    public function getRegisteredCourses($semester)
+    {
+        $userId = Auth::id();
+
+        // Normalize Semester
+        if ($semester == 1 || strtolower($semester) == "1") {
+            $semester = "First";
+        } elseif ($semester == 2 || strtolower($semester) == "2") {
+            $semester = "Second";
+        }
+
+        // If still not valid, default to First
+        if (!in_array($semester, ["First", "Second"])) {
+            $semester = "First";
+        }
+
         $courses = CourseRegistration::with('course')
             ->where('user_id', $userId)
             ->where('semester', $semester)
             ->get();
 
-        // Prepare the course data
-        $registeredCourses = $courses->map(function ($registration) {
-            return [
-                'course_code' => $registration->course->code,
-                'course_title' => $registration->course->title,
-                'credit_unit' => $registration->course->credit_unit,
-                'semester' => $registration->semester,
-                'status' => $registration->status, // You can have different statuses like 'registered', 'pending', etc.
-            ];
-        });
-
-        // Return the data to the view
-        return view('student.coursereg.index', [
-            'courses' => $registeredCourses,
-            'semester' => $semester,
-        ]);
+        return view('student.coursereg.index', compact('courses', 'semester'));
     }
+
+
 
     /**
      * Withdraw a student from a registered course.
@@ -179,7 +195,7 @@ class CourseRegistrationController extends Controller
     {
         $userId = Auth::user()->id;
         $courseId = $request->input('course_id');
-        $semester = $this->getSemesterName($request->input('semester')); // Convert to "First" or "Second"
+        $semester = $request->input('semester');
 
         // Check if the student is already registered for the course
         $existingRegistration = CourseRegistration::where('user_id', $userId)

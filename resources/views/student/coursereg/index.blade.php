@@ -2,29 +2,44 @@
 
 @section('content')
 
-    <div class="main-panel">
-        <div class="content-wrapper">
-            <div class="page-header">
-                <h3 class="page-title">
-                    <span class="page-title-icon bg-gradient-primary text-white me-2">
-                        <i class="mdi mdi-home"></i>
-                    </span> Course Registration
-                </h3>
-                <nav aria-label="breadcrumb">
-                    <ul class="breadcrumb">
-                        <li class="breadcrumb-item active" aria-current="page">
-                            <span></span>Register for Courses <i class="mdi mdi-alert-circle-outline icon-sm text-primary align-middle"></i>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
+<div class="main-panel">
+    <div class="content-wrapper">
+        <div class="page-header">
+            <h3 class="page-title">
+                <span class="page-title-icon bg-gradient-primary text-white me-2">
+                    <i class="mdi mdi-home"></i>
+                </span> Course Registration
+            </h3>
+            <nav aria-label="breadcrumb">
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item active" aria-current="page">
+                        <span></span>Registered Courses
+                        <i class="mdi mdi-alert-circle-outline icon-sm text-primary align-middle"></i>
+                    </li>
+                </ul>
+            </nav>
+        </div>
 
-            <!-- Registration Form -->
-            <div class="card">
-                <div class="card-body">
-                @if($courses->isEmpty())
-                    <div class="alert alert-warning">No courses registered for the selected semester.</div>
-                @else
+        <!-- Registered Courses Display -->
+        <div class="card">
+            <div class="card-body">
+
+                {{-- Semester Filter --}}
+                {{-- <form method="GET" action="{{ route('student.courses.registered') }}" class="mb-3">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label>Select Semester:</label>
+                            <select name="semester" onchange="this.form.submit()" class="form-control">
+                                <option value="First" {{ $semester == 'First' ? 'selected' : '' }}>First Semester</option>
+                                <option value="Second" {{ $semester == 'Second' ? 'selected' : '' }}>Second Semester</option>
+                            </select>
+                        </div>
+                    </div>
+                </form> --}}
+
+                    @if(count($courses) === 0)
+                        <div class="alert alert-warning">No courses registered for Semester: {{ $semester }}</div>
+                    @else
                     <table class="table table-bordered mt-4">
                         <thead>
                             <tr>
@@ -36,13 +51,13 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($courses as $course)
+                            @foreach($courses as $registration)
                                 <tr>
-                                    <td>{{ $course['course_code'] }}</td>
-                                    <td>{{ $course['course_title'] }}</td>
-                                    <td>{{ $course['credit_unit'] }}</td>
-                                    <td>{{ $course['semester'] }}</td>
-                                    <td>{{ ucfirst($course['status']) }}</td>
+                                    <td>{{ $registration->course->code }}</td>
+                                    <td>{{ $registration->course->title }}</td>
+                                    <td>{{ $registration->course->credit_unit }}</td>
+                                    <td>{{ $registration->semester }}</td>
+                                    <td>{{ ucfirst($registration->status) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -58,10 +73,10 @@
                         </a>
                     </div>
                 @endif
-                </div>
+            </div>
             </div>
         </div>
-        </div>
     </div>
+</div>
 
 @endsection

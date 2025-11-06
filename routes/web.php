@@ -36,11 +36,13 @@ Route::middleware([
         Route::prefix('courses')->name('courses.')->group(function () {
             Route::get('/registration', [CourseRegistrationController::class, 'showRegistrationForm'])->name('registration');
             Route::post('/register', [CourseRegistrationController::class, 'registerForCourses'])->name('register');
+            Route::get('/by-level', [CourseRegistrationController::class, 'getCoursesByLevel'])->name('byLevel');
             Route::get('/{semester}', [CourseRegistrationController::class, 'getRegisteredCourses'])->name('registered');
             Route::post('/withdraw', [CourseRegistrationController::class, 'withdrawFromCourse'])->name('withdraw');
             Route::post('/queue', [CourseRegistrationController::class, 'addCourseToQueue'])->name('queue');
             Route::get('/download/pdf', [CourseRegistrationController::class, 'downloadCoursesPDF'])->name('download.pdf');
             Route::get('/download/excel', [CourseRegistrationController::class, 'downloadCoursesExcel'])->name('download.excel');
+
         });
 
         Route::get('/user/profile', [CustomProfileController::class, 'show'])->name('profile.show');
